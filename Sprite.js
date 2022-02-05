@@ -1,6 +1,12 @@
 import {React, useEffect, useState} from 'react';
 import {Image, Text, Pressable, View} from 'react-native';
 
+const ACTION_TRANSITIONS = {
+    walk  : 'stop',
+    stop   : 'walk',
+    attack : 'walk'
+}
+
 const Sprite = (props) => {
     const ATTACK = 'attack';
     const WALK = 'walk';
@@ -66,16 +72,9 @@ const Sprite = (props) => {
         } else {
             setClickTimer(setTimeout(() => {
                 setClickCount(0)
-            }, 1000));
+            }, 300));
 
-            console.log('action is %s', action);
-            if (action === WALK) {
-                newAction = STOP;
-            } else if (action === STOP) {
-                newAction = WALK;
-            } else if (action === ATTACK) {
-                newAction = WALK;
-            }
+            newAction = ACTION_TRANSITIONS[action];
         }
 
         return newAction;
