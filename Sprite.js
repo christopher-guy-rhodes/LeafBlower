@@ -1,5 +1,5 @@
 import {React, useEffect, useState} from 'react';
-import {Button, Image, Text, Pressable, View} from 'react-native';
+import {Image, Text, Pressable, View} from 'react-native';
 
 const Sprite = (props) => {
     const ATTACK = 'attack';
