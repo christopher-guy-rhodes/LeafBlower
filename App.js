@@ -1,20 +1,27 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { View, Text, Image, ScrollView, TextInput } from 'react-native';
+import Sprite from "./Sprite";
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+
+
+const App = () => {
+
+        return (
+            <View>
+
+                <Sprite width={400}
+                        height={400}
+                        sheetWidth={3200}
+                        sheetHeight={7200}
+                        image={require('./assets/sprite.png')}
+                        frames={
+                            {right : {
+                                walk   : {offsets : [1, 2, 3, 4, 5, 6],       fps : 7, heightOffset: 0, loop : true},
+                                attack : {offsets : [0, 1, 2, 3, 4, 5, 6, 7], fps : 7, heightOffset: 4, loop : false},
+                                stop   : {offsets : [0],                      fps : 0, heightOffset: 0, loop : false}}}}
+                />
+            </View>
+        );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default App;
