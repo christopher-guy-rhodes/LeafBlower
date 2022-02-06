@@ -1,32 +1,73 @@
 import {React, useEffect, useState} from 'react';
-import {Image, Text, Pressable, View} from 'react-native';
+import {Animated, Dimensions, Easing, Image, Pressable, Text, View} from 'react-native';
 
 const ACTION_TRANSITIONS = {
-    walk  : 'stop',
-    stop   : 'walk',
-    attack : 'walk'
+    shortPress : {
+        walk   :'run',
+        stop   : 'walk',
+        attack : 'walk',
+        run    : 'stop'
+    },
+    longPress : {
+        walk   : 'attack',
+        stop   : 'attack',
+        attack : 'attack',
+        run    : 'attack'
+    }
 }
 
 const Sprite = (props) => {
     const ATTACK = 'attack';
     const WALK = 'walk';
     const STOP = 'stop';
+    const RUN = 'run';
+
     const RIGHT = 'right';
     const LEFT = 'left';
+
+    const SHORT_PRESS = 'shortPress';
+    const LONG_PRESS = 'longPress';
 
     const [frameIndex, setFrameIndex] = useState(0);
     const [animationId, setAnimationId] = useState(0);
     const [action, setAction] = useState(STOP);
-    const [clickCount, setClickCount] = useState(0);
-    const [clickTimer, setClickTimer] = useState(0);
     const [direction, setDirection] = useState(RIGHT);
     const [offsets, setOffsets] = useState(props.frames[direction][action]['offsets']);
+    const [x] = useState(new Animated.Value(0));
 
     const heightOffset = props.frames[direction][action]['heightOffset'];
 
-    function animateSprite(newAction){
+    function animateSprite(e, newAction){
         let actionConfig = props.frames[direction][newAction];
         setOffsets(actionConfig['offsets']);
+
+        Animated.timing(x).stop();
+
+        if (actionConfig['pps'] > 0) {
+            let duration = undefined;
+            let xDest = undefined;
+            if (direction === RIGHT) {
+                // duration is distance to go divided by pixels per second
+                duration = (Dimensions.get('window').width - props.width - x._value) / actionConfig['pps'] * 1000;
+                xDest = Dimensions.get('window').width - props.width;
+            }
+            Animated.timing(
+                x,
+                {
+                    toValue: xDest,
+                    duration: duration,
+                    easing: Easing.linear
+                }
+            ).start(({ finished }) => {
+                clearInterval(animationId);
+
+                if (x._value === xDest) {
+                    console.log('hit boundary');
+                    //animateSprite(e, STOP);
+                }
+                /* completion callback */
+            });
+        }
 
         let index = 0;
         let animationId = setInterval(() => {
@@ -38,53 +79,33 @@ const Sprite = (props) => {
                     index = 0;
                 }
             }
-
+            console.log('frame index %d', index);
             setFrameIndex(index++);
         }, 1000 / actionConfig['fps']);
         setAnimationId(animationId);
-    }
-
-    function handlePress(e, animationId) {
-        let newClickCount = clickCount + 1;
-        setClickCount(newClickCount);
-
-        console.log('getting click action new click count is ' + newClickCount);
-        let newAction = getClickAction(newClickCount);
-
-        if (newAction === STOP) {
-            clearInterval(animationId);
-            setAction(STOP);
-        } else {
-            setFrameIndex(0);
-            clearInterval(animationId);
-            setAction(newAction);
-            animateSprite(newAction);
-        }
-    }
-
-    function getClickAction(clickCount) {
-        let newAction = undefined;
-
-        if (clickCount > 1) {
-            clearTimeout(clickTimer);
-            setClickCount(0);
-            newAction = ATTACK;
-        } else {
-            setClickTimer(setTimeout(() => {
-                setClickCount(0)
-            }, 300));
-
-            newAction = ACTION_TRANSITIONS[action];
-        }
-
         return newAction;
     }
 
-    return (
-        <Pressable onPress={(e) => handlePress(e, animationId)}>
-            <View style={{width: props.width, height: props.height, overflow: 'hidden', border: '1px solid black'}}>
+    function handlePress(e, pressType, animationId) {
+        clearInterval(animationId);
+        setAction(animateSprite(e, ACTION_TRANSITIONS[pressType][action]));
+        setFrameIndex(0);
+    }
 
-                <Text>x:{frameIndex} ({-1 * offsets[frameIndex] * props.width }) y:{heightOffset * props.height}</Text>
+    return (
+        <Pressable onPress= {(e) => handlePress(e, SHORT_PRESS, animationId)}
+                   onLongPress={(e) => handlePress(e, LONG_PRESS, animationId)}>
+            <Animated.View style={{width: props.width,
+                          height: props.height,
+                          overflow: 'hidden',
+                          border: '1px solid black',
+                          left : x}}>
+
+                <Text>
+                    offset:{-1 * offsets[frameIndex] * props.width}&nbsp;
+                    height offset:{heightOffset * props.height}&nbsp;
+                    fps: {props.frames[direction][action]['fps']}
+                </Text>
                 <Image source={props.image}
                     style={{
                         position: 'absolute',
@@ -92,7 +113,7 @@ const Sprite = (props) => {
                         left: -1 * offsets[frameIndex] * props.width,
                         width: props.sheetWidth,
                         height: props.sheetHeight }} />
-            </View>
+            </Animated.View>
         </Pressable>
     );
 }

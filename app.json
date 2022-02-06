@@ -10,6 +10,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "orientation": "landscape",
     "updates": {
       "fallbackToCacheTimeout": 0
     },
