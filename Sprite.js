@@ -25,6 +25,7 @@ const Sprite = (props) => {
 
     const RIGHT = 'right';
     const LEFT = 'left';
+    const CENTER = 'center';
 
     const SHORT_PRESS = 'shortPress';
     const LONG_PRESS = 'longPress';
@@ -32,9 +33,24 @@ const Sprite = (props) => {
     const [frameIndex, setFrameIndex] = useState(0);
     const [animationId, setAnimationId] = useState(0);
     const [action, setAction] = useState(STOP);
-    const [direction, setDirection] = useState(RIGHT);
+    const [direction, setDirection] = useState(props.defaultDirection);
     const [actionConfiguration, setActionConfiguration] = useState(props.frames[direction][action]);
-    const [x] = useState(new Animated.Value(0));
+
+    let defaultX = undefined;
+    switch(props.defaultPosition) {
+        case RIGHT:
+            defaultX = Dimensions.get('window').width - props.spriteWidth;
+            break;
+        case LEFT:
+            defaultX = 0;
+            break;
+        case CENTER:
+        default:
+            defaultX = (Dimensions.get('window').width - props.spriteWidth) / 2;
+            break;
+    }
+
+    const [x] = useState(new Animated.Value(defaultX));
 
     const heightOffset = props.frames[direction][action]['heightOffset'];
 
@@ -50,8 +66,11 @@ const Sprite = (props) => {
             let xDest = undefined;
             if (direction === RIGHT) {
                 // duration is distance to go divided by pixels per second
-                duration = (Dimensions.get('window').width - props.width - x._value) / actionConfig['pps'] * 1000;
-                xDest = Dimensions.get('window').width - props.width;
+                duration = (Dimensions.get('window').width - props.spriteWidth - x._value) / actionConfig['pps'] * 1000;
+                xDest = Dimensions.get('window').width - props.spriteWidth;
+            } else {
+                duration = x._value / actionConfig['pps'] * 1000;
+                xDest = 0;
             }
 
             let startedAtBoundary = xDest === x._value;
@@ -101,24 +120,25 @@ const Sprite = (props) => {
     return (
         <Pressable onPress= {(e) => handlePress(e, SHORT_PRESS, animationId)}
                    onLongPress={(e) => handlePress(e, LONG_PRESS, animationId)}>
-            <Animated.View style={{width: props.width,
-                          height: props.height,
+            <Animated.View style={{width: props.spriteWidth,
+                          height: props.spriteHeight,
                           overflow: 'hidden',
                           border: '1px solid black',
-                          left : x}}>
+                          left : x,
+                          position : 'absolute'}}>
 
                 <Text>
                     action:{action}<br/>
                     direction:{direction}<br/>
-                    offset:{-1 * actionConfiguration['offsets'][frameIndex] * props.width}<br/>
-                    height offset:{heightOffset * props.height}<br/>
+                    offset:{-1 * actionConfiguration['offsets'][frameIndex] * props.spriteWidth}<br/>
+                    height offset:{heightOffset * props.spriteHeight}<br/>
                     fps: {props.frames[direction][action]['fps']}
                 </Text>
-                <Image source={props.image}
+                <Image source={props.sheetImage}
                     style={{
                         position: 'absolute',
-                        top: -1 * heightOffset * props.height,
-                        left: -1 * actionConfiguration['offsets'][frameIndex] * props.width,
+                        top: -1 * heightOffset * props.spriteHeight,
+                        left: -1 * actionConfiguration['offsets'][frameIndex] * props.spriteWidth,
                         width: props.sheetWidth,
                         height: props.sheetHeight }} />
             </Animated.View>
