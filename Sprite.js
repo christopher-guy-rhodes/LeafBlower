@@ -1,6 +1,7 @@
-import {React, useEffect, useState} from 'react';
+import {React, useContext, useEffect, useState} from 'react';
 import {Animated, Dimensions, Easing, Image, Pressable, Text, View} from 'react-native';
 import {newRangeCount} from "react-native-web/dist/vendor/react-native/VirtualizeUtils";
+import {ThemeContext, themes} from "./theme-context";
 
 const ACTION_TRANSITIONS = {
     shortPress : {
@@ -104,7 +105,6 @@ const Sprite = (props) => {
                     index = 0;
                 }
             }
-            console.log('frame index for action %s is %d',newAction, index);
             setFrameIndex(index);
             index++;
         }, 1000 / actionConfig['fps']);
@@ -116,6 +116,20 @@ const Sprite = (props) => {
         animateSprite(e, ACTION_TRANSITIONS[pressType][action]);
         setFrameIndex(0);
     }
+
+    const state = useContext(ThemeContext);
+    //state.setState({theme : themes.dark, setTheme : state.setTheme});
+
+    useEffect(() => {
+
+        let flag = true;
+        setInterval(function() {
+            state.setTheme(flag ? themes.dark : themes.light);
+            flag = flag ? false : true;
+        },2000);
+
+        //state.setTheme(themes.light);
+    },[]);
 
     return (
         <Pressable onPress= {(e) => handlePress(e, SHORT_PRESS, animationId)}
@@ -132,7 +146,8 @@ const Sprite = (props) => {
                     direction:{direction}<br/>
                     offset:{-1 * actionConfiguration['offsets'][frameIndex] * props.spriteWidth}<br/>
                     height offset:{heightOffset * props.spriteHeight}<br/>
-                    fps: {props.frames[direction][action]['fps']}
+                    fps: {props.frames[direction][action]['fps']}<br/>
+                    positions: {state.theme.background}
                 </Text>
                 <Image source={props.sheetImage}
                     style={{

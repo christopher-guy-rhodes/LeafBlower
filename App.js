@@ -1,80 +1,41 @@
-import React from 'react';
+import {React, useState} from 'react';
 import { View, Text, Image, ScrollView, TextInput } from 'react-native';
+import frames from "./frames";
 import Sprite from "./Sprite";
-
-const frames = {right : {
-        walk : {
-            offsets      : [1, 2, 3, 4, 5, 6],
-            fps          : 7,
-            pps          : 150,
-            heightOffset : 0,
-            loop         : true},
-        attack : {
-            offsets      : [0, 1, 2, 3, 4, 5, 6, 7],
-            fps          : 7,
-            heightOffset : 4,
-            loop         : false},
-        stop : {
-            offsets      : [0],
-            fps          : 0,
-            heightOffset : 0,
-            loop         : false},
-        run : {
-            offsets      : [0, 1, 2, 3, 4, 5],
-            fps          : 12,
-            pps          : 500,
-            heightOffset : 2,
-            loop         : true}
-    },
-    left : {
-        walk : {
-            offsets      : [5, 4, 3, 2, 1, 0],
-            fps          : 7,
-            pps          : 150,
-            heightOffset : 1,
-            loop         : true},
-        attack : {
-            offsets      : [7, 6, 5, 4, 3, 2, 1, 0],
-            fps          : 7,
-            heightOffset : 5,
-            loop         : false},
-        stop : {
-            offsets      : [6],
-            fps          : 0,
-            heightOffset : 1,
-            loop         : false},
-        run : {
-            offsets      : [5, 4, 3, 2, 1, 0],
-            fps          : 12,
-            pps          : 500,
-            heightOffset : 3,
-            loop         : true}
-    }};
+import {ThemeContext, themes} from "./theme-context";
 
 const App = () => {
 
-        return (
-            <View>
-                <Sprite spriteWidth={400}
-                        spriteHeight={400}
-                        sheetWidth={3200}
-                        sheetHeight={7200}
-                        sheetImage={require('./assets/sprite.png')}
-                        defaultDirection={"right"}
-                        defaultPosition={"left"}
-                        frames={frames}
-                />
-                <Sprite spriteWidth={400}
-                        spriteHeight={400}
-                        sheetWidth={3200}
-                        sheetHeight={7200}
-                        sheetImage={require('./assets/sprite.png')}
-                        defaultDirection={"left"}
-                        defaultPosition={"right"}
-                        frames={frames}
-                />
-            </View>
-        );
+    function setTheme(theme) {
+        setState({theme: theme});
+    }
+
+    const [state, setState] = useState({theme: themes.light, setTheme : setTheme});
+
+    return (
+        <ThemeContext.Provider value={state}>
+        <View>
+            <Sprite id={"barbarian"}
+                    spriteWidth={400}
+                    spriteHeight={400}
+                    sheetWidth={3200}
+                    sheetHeight={7200}
+                    sheetImage={require('./assets/sprite.png')}
+                    defaultDirection={"left"}
+                    defaultPosition={"right"}
+                    frames={frames}/>
+            <Sprite id={"monster"}
+                    spriteWidth={400}
+                    spriteHeight={400}
+                    sheetWidth={3200}
+                    sheetHeight={7200}
+                    sheetImage={require('./assets/sprite.png')}
+                    defaultDirection={"right"}
+                    defaultPosition={"left"}
+                    frames={frames}/>
+        </View>
+        </ThemeContext.Provider>
+    );
 }
 
 export default App;
