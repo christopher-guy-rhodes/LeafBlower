@@ -6,11 +6,12 @@ import {GameContext, themes} from "./game-context";
 
 const Game = () => {
 
-    function setTheme(theme) {
-        setState({theme: theme});
+    function setGameState(gameState) {
+        setState({gameState: gameState});
     }
 
-    const [state, setState] = useState({theme: themes.light, setTheme : setTheme});
+    const [state, setState] = useState(
+        {gameState: { positions : {}}, setGameState : setGameState});
 
     return (
         <GameContext.Provider value={state}>
@@ -21,8 +22,8 @@ const Game = () => {
                     sheetWidth={3200}
                     sheetHeight={7200}
                     sheetImage={require('./assets/sprite.png')}
-                    defaultDirection={"left"}
-                    defaultPosition={"right"}
+                    defaultDirection={"right"}
+                    defaultPosition={"left"}
                     frames={frames}/>
             <Sprite id={"monster"}
                     spriteWidth={400}
@@ -30,8 +31,8 @@ const Game = () => {
                     sheetWidth={3200}
                     sheetHeight={7200}
                     sheetImage={require('./assets/sprite.png')}
-                    defaultDirection={"right"}
-                    defaultPosition={"left"}
+                    defaultDirection={"left"}
+                    defaultPosition={"right"}
                     frames={frames}/>
         </View>
         </GameContext.Provider>

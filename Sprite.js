@@ -52,6 +52,7 @@ const Sprite = (props) => {
     }
 
     const [x] = useState(new Animated.Value(defaultX));
+    const [y] = useState(new Animated.Value(Dimensions.get('window').height - props.spriteHeight));
 
     const heightOffset = props.frames[direction][action]['heightOffset'];
 
@@ -122,14 +123,15 @@ const Sprite = (props) => {
 
     // Wrap in useEffect to run only wen the data changes and not on every component prop update
     useEffect(() => {
+        //console.log('state is %o', state);
+        if (state['gameState']['positions'][props.id] === undefined) {
+            state['gameState']['positions'][props.id] = {x : 0, y : 0};
+        }
 
-        let flag = true;
-        setInterval(function() {
-            state.setTheme(flag ? themes.dark : themes.light);
-            flag = flag ? false : true;
-        },2000);
 
-        //state.setTheme(themes.light);
+        state['gameState']['positions'][props.id]['x'] = x;
+        state['gameState']['positions'][props.id]['y'] = y;
+        state.setGameState(state.gameState);
     },[]);
 
     return (
@@ -140,15 +142,17 @@ const Sprite = (props) => {
                           overflow: 'hidden',
                           border: '1px solid black',
                           left : x,
+                          top  : y,
                           position : 'absolute'}}>
 
                 <Text>
+                    id:{props.id}<br/>
                     action:{action}<br/>
                     direction:{direction}<br/>
-                    offset:{-1 * actionConfiguration['offsets'][frameIndex] * props.spriteWidth}<br/>
-                    height offset:{heightOffset * props.spriteHeight}<br/>
+                    image x offset:{-1 * actionConfiguration['offsets'][frameIndex] * props.spriteWidth}<br/>
+                    image y offset:{heightOffset * props.spriteHeight}<br/>
                     fps: {props.frames[direction][action]['fps']}<br/>
-                    positions: {state.theme.background}
+                    coordinates: {JSON.stringify(state.gameState.positions[props.id])}
                 </Text>
                 <Image source={props.sheetImage}
                     style={{
