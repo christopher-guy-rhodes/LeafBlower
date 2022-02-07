@@ -2,9 +2,9 @@ import {React, useState} from 'react';
 import { View, Text, Image, ScrollView, TextInput } from 'react-native';
 import frames from "./frames";
 import Sprite from "./Sprite";
-import {ThemeContext, themes} from "./theme-context";
+import {GameContext, themes} from "./game-context";
 
-const App = () => {
+const Game = () => {
 
     function setTheme(theme) {
         setState({theme: theme});
@@ -13,7 +13,7 @@ const App = () => {
     const [state, setState] = useState({theme: themes.light, setTheme : setTheme});
 
     return (
-        <ThemeContext.Provider value={state}>
+        <GameContext.Provider value={state}>
         <View>
             <Sprite id={"barbarian"}
                     spriteWidth={400}
@@ -34,8 +34,8 @@ const App = () => {
                     defaultPosition={"left"}
                     frames={frames}/>
         </View>
-        </ThemeContext.Provider>
+        </GameContext.Provider>
     );
 }
 
-export default App;
+export default Game;

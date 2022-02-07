@@ -1,7 +1,7 @@
 import {React, useContext, useEffect, useState} from 'react';
 import {Animated, Dimensions, Easing, Image, Pressable, Text, View} from 'react-native';
 import {newRangeCount} from "react-native-web/dist/vendor/react-native/VirtualizeUtils";
-import {ThemeContext, themes} from "./theme-context";
+import {GameContext, themes} from "./game-context";
 
 const ACTION_TRANSITIONS = {
     shortPress : {
@@ -117,9 +117,10 @@ const Sprite = (props) => {
         setFrameIndex(0);
     }
 
-    const state = useContext(ThemeContext);
+    const state = useContext(GameContext);
     //state.setState({theme : themes.dark, setTheme : state.setTheme});
 
+    // Wrap in useEffect to run only wen the data changes and not on every component prop update
     useEffect(() => {
 
         let flag = true;

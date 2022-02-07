@@ -11,7 +11,7 @@ export const themes = {
     },
 };
 
-export const ThemeContext = React.createContext({
+export const GameContext = React.createContext({
     theme: themes.light,
-    setTheme: (theme) => {console.log('fooobar');}
+    setTheme: (theme) => {}
 });
