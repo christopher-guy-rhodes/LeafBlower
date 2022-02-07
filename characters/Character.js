@@ -1,77 +1,37 @@
 import {React, useContext, useEffect, useState} from 'react';
 import {Animated, Dimensions, Easing, Image, Pressable, Text, View} from 'react-native';
-import {newRangeCount} from "react-native-web/dist/vendor/react-native/VirtualizeUtils";
-import {GameContext, themes} from "./game-context";
+import {GameContext} from "../game/game-context";
+import {ACTION_TRANSITIONS, LEFT, LONG_PRESS, PPS, RIGHT, SHORT_PRESS, STOP} from "../util/constants";
 
-const ACTION_TRANSITIONS = {
-    shortPress : {
-        walk   :'run',
-        stop   : 'walk',
-        attack : 'walk',
-        run    : 'stop'
-    },
-    longPress : {
-        walk   : 'attack',
-        stop   : 'attack',
-        attack : 'attack',
-        run    : 'attack'
-    }
-}
 
-const Sprite = (props) => {
-    const ATTACK = 'attack';
-    const WALK = 'walk';
-    const STOP = 'stop';
-    const RUN = 'run';
-
-    const RIGHT = 'right';
-    const LEFT = 'left';
-    const CENTER = 'center';
-
-    const SHORT_PRESS = 'shortPress';
-    const LONG_PRESS = 'longPress';
-
+const Character = (props) => {
     const [frameIndex, setFrameIndex] = useState(0);
     const [animationId, setAnimationId] = useState(0);
     const [action, setAction] = useState(STOP);
     const [direction, setDirection] = useState(props.defaultDirection);
-    const [actionConfiguration, setActionConfiguration] = useState(props.frames[direction][action]);
-
-    let defaultX = undefined;
-    switch(props.defaultPosition) {
-        case RIGHT:
-            defaultX = Dimensions.get('window').width - props.spriteWidth;
-            break;
-        case LEFT:
-            defaultX = 0;
-            break;
-        case CENTER:
-        default:
-            defaultX = (Dimensions.get('window').width - props.spriteWidth) / 2;
-            break;
-    }
-
-    const [x] = useState(new Animated.Value(defaultX));
+    const [characterConfig, setCharacterConfig] = useState(props.characterConfig[direction][action]);
+    const [x] = useState(new Animated.Value(getDefaultX()));
     const [y] = useState(new Animated.Value(Dimensions.get('window').height - props.spriteHeight));
 
-    const heightOffset = props.frames[direction][action]['heightOffset'];
+    const heightOffset = props.characterConfig[direction][action]['heightOffset'];
 
-    function animateSprite(e, newAction){
+    function animateCharacter(e, newAction){
         setAction(newAction);
-        let actionConfig = props.frames[direction][newAction];
-        setActionConfiguration(actionConfig);
+
+        let characterConfig = props.characterConfig[direction][newAction];
+        setCharacterConfig(characterConfig);
 
         Animated.timing(x).stop();
 
-        if (actionConfig['pps'] > 0) {
-            let duration = undefined;
-            let xDest = undefined;
+        if (characterConfig[PPS] > 0) {
+            let duration;
+            let xDest;
             if (direction === RIGHT) {
                 // duration is distance to go divided by pixels per second
-                duration = (Dimensions.get('window').width - props.spriteWidth - x._value) / actionConfig['pps'] * 1000;
+                duration = (Dimensions.get('window').width - props.spriteWidth - x._value) / characterConfig['pps'] * 1000;
                 xDest = Dimensions.get('window').width - props.spriteWidth;
             } else {
-                duration = x._value / actionConfig['pps'] * 1000;
+                duration = x._value / characterConfig['pps'] * 1000;
                 xDest = 0;
             }
 
@@ -89,7 +49,7 @@ const Sprite = (props) => {
 
                 if (x._value === xDest) {
                     if (!startedAtBoundary) {
-                        animateSprite(e, STOP);
+                        animateCharacter(e, STOP);
                     }
                 }
             });
@@ -98,23 +58,55 @@ const Sprite = (props) => {
         let index = 0;
         let animationId = setInterval(() => {
 
-            if (index > actionConfig['offsets'].length - 1) {
-                if (actionConfig['loop'] === false) {
+            if (index > characterConfig['offsets'].length - 1) {
+                if (characterConfig['loop'] === false) {
                     clearInterval(animationId);
                     return;
                 } else {
                     index = 0;
                 }
             }
+            console.log('%s frame index is %d x:%o',props.id, index, getCurrentX());
             setFrameIndex(index);
             index++;
-        }, 1000 / actionConfig['fps']);
+        }, 1000 / characterConfig['fps']);
         setAnimationId(animationId);
+    }
+
+    function getCurrentX() {
+        if (state['gameState']['positions'][props.id] === undefined) {
+            return 0;
+        }
+        return state['gameState']['positions'][props.id]['x']._value;
+    }
+
+    function getCurrentY() {
+        if (state['gameState']['positions'][props.id] === undefined) {
+            return 0;
+        }
+        return state['gameState']['positions'][props.id]['y']._value;
+    }
+
+    function getDefaultX() {
+        let defaultX = undefined;
+        switch(props.defaultPosition) {
+            case RIGHT:
+                defaultX = Dimensions.get('window').width - props.spriteWidth;
+                break;
+            case LEFT:
+                defaultX = 0;
+                break;
+            case CENTER:
+            default:
+                defaultX = (Dimensions.get('window').width - props.spriteWidth) / 2;
+                break;
+        }
+        return defaultX;
     }
 
     function handlePress(e, pressType, animationId) {
         clearInterval(animationId);
-        animateSprite(e, ACTION_TRANSITIONS[pressType][action]);
+        animateCharacter(e, ACTION_TRANSITIONS[pressType][action]);
         setFrameIndex(0);
     }
 
@@ -149,16 +141,17 @@ const Sprite = (props) => {
                     id:{props.id}<br/>
                     action:{action}<br/>
                     direction:{direction}<br/>
-                    image x offset:{-1 * actionConfiguration['offsets'][frameIndex] * props.spriteWidth}<br/>
+                    image x offset:{-1 * characterConfig['offsets'][frameIndex] * props.spriteWidth}<br/>
                     image y offset:{heightOffset * props.spriteHeight}<br/>
-                    fps: {props.frames[direction][action]['fps']}<br/>
-                    coordinates: {JSON.stringify(state.gameState.positions[props.id])}
+                    fps: {props.characterConfig[direction][action]['fps']}<br/>
+                    x: {getCurrentX()}<br/>
+                    y: {getCurrentY()}
                 </Text>
                 <Image source={props.sheetImage}
                     style={{
                         position: 'absolute',
                         top: -1 * heightOffset * props.spriteHeight,
-                        left: -1 * actionConfiguration['offsets'][frameIndex] * props.spriteWidth,
+                        left: -1 * characterConfig['offsets'][frameIndex] * props.spriteWidth,
                         width: props.sheetWidth,
                         height: props.sheetHeight }} />
             </Animated.View>
@@ -166,4 +159,4 @@ const Sprite = (props) => {
     );
 }
 
-export default Sprite;
+export default Character;

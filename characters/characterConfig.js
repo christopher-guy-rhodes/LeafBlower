@@ -1,4 +1,4 @@
-const frames = {right : {
+const characterConfig = {right : {
         walk : {
             offsets      : [1, 2, 3, 4, 5, 6],
             fps          : 7,
@@ -47,4 +47,4 @@ const frames = {right : {
             loop         : true}
     }};
 
-export default frames;
+export default characterConfig;
