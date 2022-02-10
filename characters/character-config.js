@@ -2,7 +2,7 @@ const characterConfig = {right : {
         walk : {
             offsets      : [1, 2, 3, 4, 5, 6],
             fps          : 7,
-            pps          : 150,
+            pps          : 200,
             heightOffset : 0,
             loop         : true},
         attack : {
@@ -18,7 +18,7 @@ const characterConfig = {right : {
         run : {
             offsets      : [0, 1, 2, 3, 4, 5],
             fps          : 12,
-            pps          : 500,
+            pps          : 300,
             heightOffset : 2,
             loop         : true}
     },
