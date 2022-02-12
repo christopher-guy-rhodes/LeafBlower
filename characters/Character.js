@@ -244,7 +244,7 @@ const Character = (props) => {
     return (
         <Pressable onPress= {(e) => handlePress(e, SHORT_PRESS, animationId)}
                    onLongPress={(e) => handlePress(e, LONG_PRESS, animationId)}>
-            <View style={{position : 'absolute', width : Dimensions.get('window').width, height : Dimensions.get('window').height}}>
+            <View style={{position : 'absolute', width : Dimensions.get('window').width, height : Dimensions.get('window').height, userSelect: 'none'}}>
             <Animated.View style={{width: props.spriteWidth,
                           height: props.spriteHeight,
                           overflow: 'hidden',
