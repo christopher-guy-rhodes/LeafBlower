@@ -1,6 +1,6 @@
 import {React, useState} from 'react';
 import { View, Text, Image, ScrollView, TextInput } from 'react-native';
-import characterConfig from "../characters/character-config";
+import {characterConfig} from "../characters/character-config";
 import Character from "../characters/Character";
 import {GameContext} from "./game-context";
 

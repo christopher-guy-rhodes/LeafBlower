@@ -47,4 +47,19 @@ const characterConfig = {right : {
             loop         : true}
     }};
 
-export default characterConfig;
+const ACTION_TRANSITIONS = {
+    shortPress : {
+        walk   : 'run',
+        stop   : 'walk',
+        attack : 'walk',
+        run    : 'stop'
+    },
+    longPress : {
+        walk   : 'attack',
+        stop   : 'attack',
+        attack : 'attack',
+        run    : 'attack'
+    }
+};
+
+export {ACTION_TRANSITIONS, characterConfig};

@@ -1,7 +1,8 @@
 import {React, useContext, useEffect, useState} from 'react';
 import {Animated, Dimensions, Easing, Image, Pressable, Text, View} from 'react-native';
 import {GameContext} from "../game/game-context";
-import {ACTION_TRANSITIONS, LEFT, LONG_PRESS, PPS, RIGHT, SHORT_PRESS, STOP} from "../util/constants";
+import {LEFT, LONG_PRESS, PPS, RIGHT, SHORT_PRESS, STOP} from "../util/constants";
+import {ACTION_TRANSITIONS} from "./character-config";
 
 
 const Character = (props) => {
