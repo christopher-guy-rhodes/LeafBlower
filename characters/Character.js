@@ -3,6 +3,7 @@ import {Animated, Dimensions, Easing, Image, Pressable, Text, View} from 'react-
 import {GameContext} from "../game/game-context";
 import {DOUBLE_CLICK, DOUBLE_CLICK_THRESHOLD_MS, FPS, LEFT, LONG_PRESS, PPS, RIGHT, SHORT_PRESS, STOP} from "../util/constants";
 import {ACTION_TRANSITIONS} from "./character-config";
+import backgroundImage from "../assets/backgrounds/scrolling-desert.png";
 
 
 const Character = (props) => {
@@ -56,7 +57,7 @@ const Character = (props) => {
 
                 ]
             ).start(({ finished }) => {
-                clearInterval(animationId);
+                //clearInterval(animationId);
             });
         }
 
@@ -244,7 +245,12 @@ const Character = (props) => {
     return (
         <Pressable onPress= {(e) => handlePress(e, SHORT_PRESS, animationId)}
                    onLongPress={(e) => handlePress(e, LONG_PRESS, animationId)}>
-            <View style={{position : 'absolute', width : Dimensions.get('window').width, height : Dimensions.get('window').height, userSelect: 'none'}}>
+            <Animated.View style={{position : 'absolute',
+                          width : Dimensions.get('window').width,
+                          height : Dimensions.get('window').height,
+                          userSelect: 'none',
+                          /*backgroundImage: `url(${backgroundImage})`,
+                          left : x*/}}>
             <Animated.View style={{width: props.spriteWidth,
                           height: props.spriteHeight,
                           overflow: 'hidden',
@@ -273,7 +279,7 @@ const Character = (props) => {
                         width: props.sheetWidth,
                         height: props.sheetHeight }} />
             </Animated.View>
-            </View>
+            </Animated.View>
         </Pressable>
     );
 }

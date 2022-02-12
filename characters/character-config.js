@@ -51,7 +51,7 @@ const ACTION_TRANSITIONS = {
     shortPress : {
         walk   : 'run',
         stop   : 'walk',
-        attack : 'attack',
+        attack : 'walk',
         run    : 'walk'
     },
     longPress : {
