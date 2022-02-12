@@ -1,4 +1,4 @@
-const characterConfig = {right : {
+const CHARACTER_CONFIG = {right : {
         walk : {
             offsets      : [1, 2, 3, 4, 5, 6],
             fps          : 7,
@@ -51,15 +51,21 @@ const ACTION_TRANSITIONS = {
     shortPress : {
         walk   : 'run',
         stop   : 'walk',
-        attack : 'walk',
-        run    : 'stop'
+        attack : 'attack',
+        run    : 'walk'
     },
     longPress : {
+        walk   : 'stop',
+        stop   : 'stop',
+        attack : 'stop',
+        run    : 'stop'
+    },
+    doubleClick : {
         walk   : 'attack',
         stop   : 'attack',
-        attack : 'attack',
+        attack : 'walk',
         run    : 'attack'
     }
 };
 
-export {ACTION_TRANSITIONS, characterConfig};
+export {ACTION_TRANSITIONS, CHARACTER_CONFIG};

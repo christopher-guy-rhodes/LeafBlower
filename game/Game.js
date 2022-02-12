@@ -1,6 +1,6 @@
 import {React, useState} from 'react';
 import { View, Text, Image, ScrollView, TextInput } from 'react-native';
-import {characterConfig} from "../characters/character-config";
+import {CHARACTER_CONFIG} from "../characters/character-config";
 import Character from "../characters/Character";
 import {GameContext} from "./game-context";
 
@@ -25,7 +25,7 @@ const Game = () => {
                        defaultDirection={"left"}
                        defaultPosition={"right"}
                        bindClicks={false}
-                       characterConfig={characterConfig}/>
+                       characterConfig={CHARACTER_CONFIG}/>
             {/* Character with bind clicks must be last so it overlaps other characters */}
             <Character id={"barbarian"}
                        spriteWidth={400}
@@ -36,7 +36,7 @@ const Game = () => {
                        defaultDirection={"right"}
                        defaultPosition={"left"}
                        bindClicks={true}
-                       characterConfig={characterConfig}/>
+                       characterConfig={CHARACTER_CONFIG}/>
         </View>
         </GameContext.Provider>
     );

@@ -1,7 +1,7 @@
 import {React, useContext, useEffect, useState} from 'react';
 import {Animated, Dimensions, Easing, Image, Pressable, Text, View} from 'react-native';
 import {GameContext} from "../game/game-context";
-import {LEFT, LONG_PRESS, PPS, RIGHT, SHORT_PRESS, STOP} from "../util/constants";
+import {DOUBLE_CLICK, DOUBLE_CLICK_THRESHOLD_MS, FPS, LEFT, LONG_PRESS, PPS, RIGHT, SHORT_PRESS, STOP} from "../util/constants";
 import {ACTION_TRANSITIONS} from "./character-config";
 
 
@@ -13,6 +13,7 @@ const Character = (props) => {
     const [characterConfig, setCharacterConfig] = useState(props.characterConfig[direction][action]);
     const [x] = useState(new Animated.Value(getDefaultX()));
     const [y] = useState(new Animated.Value(getBottomY()));
+    const [clickEvent, setClickEvent] = useState(false);
 
     const HEIGHT_OFFSET = props.characterConfig[direction][action]['heightOffset'];
 
@@ -35,7 +36,7 @@ const Character = (props) => {
         // Animate the movement
         if (characterConfig[PPS] > 0) {
             let newCoordinate = getNewCoordinate(e, dir);
-            let duration = getDistanceToCoordinate(newCoordinate) / characterConfig['pps'] * 1000;
+            let duration = getDistanceToCoordinate(newCoordinate) / characterConfig[PPS] * 1000;
 
             Animated.parallel([
                     Animated.timing(
@@ -73,7 +74,7 @@ const Character = (props) => {
             }
             setFrameIndex(index);
             index++;
-        }, 1000 / characterConfig['fps']);
+        }, 1000 / characterConfig[FPS]);
         setAnimationId(animationId);
     }
 
@@ -103,7 +104,6 @@ const Character = (props) => {
         let y1 = y._value;
         let x2 = e.pageX - props.spriteWidth / 2;
         let y2 = e.pageY - props.spriteHeight / 2;
-
 
         let xBoundary = direction === RIGHT ? Dimensions.get('window').width - props.spriteWidth : 0;
 
@@ -202,9 +202,16 @@ const Character = (props) => {
             return;
         }
 
+        let act = ACTION_TRANSITIONS[clickEvent ? DOUBLE_CLICK : pressType][action];
+
+        setClickEvent(true);
+        setTimeout(function () {
+            setClickEvent(false);
+        }, DOUBLE_CLICK_THRESHOLD_MS);
+
         let dir = direction;
         let didChangeDirection = false;
-        let act = ACTION_TRANSITIONS[pressType][action];
+
         if (direction === RIGHT && e.pageX < (x._value + props.spriteWidth / 2)) {
             dir = LEFT;
             setDirection(dir);
@@ -252,8 +259,8 @@ const Character = (props) => {
                     direction:{direction}<br/>
                     image x offset:{-1 * characterConfig['offsets'][frameIndex] * props.spriteWidth}<br/>
                     image y offset:{HEIGHT_OFFSET * props.spriteHeight}<br/>
-                    fps: {props.characterConfig[direction][action]['fps']}<br/>
-                    pps: {props.characterConfig[direction][action]['pps']}<br/>
+                    fps: {props.characterConfig[direction][action][FPS]}<br/>
+                    pps: {props.characterConfig[direction][action][PPS]}<br/>
                     x: {getCurrentX()}<br/>
                     y: {getCurrentY()}<br/>
                     animationId: {animationId}
