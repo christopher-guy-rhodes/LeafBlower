@@ -8,11 +8,13 @@ const CHARACTER_CONFIG = {right : {
         attack : {
             offsets      : [0, 1, 2, 3, 4, 5, 6, 7],
             fps          : 7,
+            pps          : 0,
             heightOffset : 4,
             loop         : false},
         stop : {
             offsets      : [0],
             fps          : 0,
+            pps          : 0,
             heightOffset : 0,
             loop         : false},
         run : {
@@ -32,11 +34,13 @@ const CHARACTER_CONFIG = {right : {
         attack : {
             offsets      : [7, 6, 5, 4, 3, 2, 1, 0],
             fps          : 7,
+            pps          : 0,
             heightOffset : 5,
             loop         : false},
         stop : {
             offsets      : [6],
             fps          : 0,
+            pps          : 0,
             heightOffset : 1,
             loop         : false},
         run : {
@@ -55,16 +59,16 @@ const ACTION_TRANSITIONS = {
         run    : 'walk'
     },
     longPress : {
+        walk   : 'attack',
+        stop   : 'attack',
+        attack : 'attack',
+        run    : 'attack'
+    },
+    doubleClick : {
         walk   : 'stop',
         stop   : 'stop',
         attack : 'stop',
         run    : 'stop'
-    },
-    doubleClick : {
-        walk   : 'attack',
-        stop   : 'attack',
-        attack : 'walk',
-        run    : 'attack'
     }
 };
 

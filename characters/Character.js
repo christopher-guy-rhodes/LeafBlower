@@ -14,6 +14,8 @@ const Character = (props) => {
     const [characterConfig, setCharacterConfig] = useState(props.characterConfig[direction][action]);
     const [x] = useState(new Animated.Value(getDefaultX()));
     const [y] = useState(new Animated.Value(getBottomY()));
+    const [mouseX, setMouseX] = useState(0);
+    const [mouseY, setMouseY] = useState(0);
     const [clickEvent, setClickEvent] = useState(false);
 
     const HEIGHT_OFFSET = props.characterConfig[direction][action]['heightOffset'];
@@ -28,11 +30,12 @@ const Character = (props) => {
     function animateCharacter(e, act, dir){
         setAction(act);
 
+        setFrameIndex(0);
         let characterConfig = props.characterConfig[dir][act];
         setCharacterConfig(characterConfig);
 
-        Animated.timing(x).stop();
-        Animated.timing(y).stop();
+        Animated.timing(x, {useNativeDriver: false}).stop();
+        Animated.timing(y, {useNativeDriver: false}).stop();
 
         // Animate the movement
         if (characterConfig[PPS] > 0) {
@@ -45,14 +48,16 @@ const Character = (props) => {
                         {
                             toValue: newCoordinate['x'],
                             duration: duration,
-                            easing: Easing.linear
+                            easing: Easing.linear,
+                            useNativeDriver: false
                         }),
                     Animated.timing(
                         y,
                         {
                             toValue: newCoordinate['y'],
                             duration: duration,
-                            easing: Easing.linear
+                            easing: Easing.linear,
+                            useNativeDriver : false
                         })
 
                 ]
@@ -63,6 +68,7 @@ const Character = (props) => {
 
         // Animate the frames
         let index = 0;
+        let timeout = characterConfig[FPS] == 0 ? 0 : 1000 / characterConfig[FPS];
         let animationId = setInterval(() => {
 
             if (index > characterConfig['offsets'].length - 1) {
@@ -75,7 +81,7 @@ const Character = (props) => {
             }
             setFrameIndex(index);
             index++;
-        }, 1000 / characterConfig[FPS]);
+        }, timeout);
         setAnimationId(animationId);
     }
 
@@ -103,8 +109,9 @@ const Character = (props) => {
     function getNewCoordinate(e, direction) {
         let x1 = x._value;
         let y1 = y._value;
-        let x2 = e.pageX - props.spriteWidth / 2;
-        let y2 = e.pageY - props.spriteHeight / 2;
+
+        let x2 = e.nativeEvent.pageX - props.spriteWidth / 2;
+        let y2 = e.nativeEvent.pageY - props.spriteHeight / 2;
 
         let xBoundary = direction === RIGHT ? Dimensions.get('window').width - props.spriteWidth : 0;
 
@@ -130,14 +137,14 @@ const Character = (props) => {
         // If y is off screen set it to the screen boundary
         if (newY < 0) {
             newY = 0;
-        } else if (newY > getBottomY()) {
+        } else if (y2 > getBottomY()) {
             newY = getBottomY();
         }
 
         return {
             x : newX,
             y : newY,
-        }
+        };
     }
 
     /**
@@ -213,11 +220,11 @@ const Character = (props) => {
         let dir = direction;
         let didChangeDirection = false;
 
-        if (direction === RIGHT && e.pageX < (x._value + props.spriteWidth / 2)) {
+        if (direction === RIGHT && e.nativeEvent.pageX < (x._value + props.spriteWidth / 2)) {
             dir = LEFT;
             setDirection(dir);
             act = action;
-        } else if (direction == LEFT && e.pageX >= (x._value + props.spriteWidth / 2)) {
+        } else if (direction == LEFT && e.nativeEvent.pageX >= (x._value + props.spriteWidth / 2)) {
             dir = RIGHT;
             setDirection(dir);
             act = action;
@@ -226,6 +233,11 @@ const Character = (props) => {
         clearInterval(animationId);
         animateCharacter(e, act, dir);
         setFrameIndex(0);
+    }
+
+    function handleMouseMove(e) {
+        setMouseX(e.screenX);
+        setMouseY(e.screenY);
     }
 
     const state = useContext(GameContext);
@@ -244,7 +256,8 @@ const Character = (props) => {
 
     return (
         <Pressable onPress= {(e) => handlePress(e, SHORT_PRESS, animationId)}
-                   onLongPress={(e) => handlePress(e, LONG_PRESS, animationId)}>
+                   onLongPress={(e) => handlePress(e, LONG_PRESS, animationId)}
+                   onMouseMove={(e) => handleMouseMove(e)}>
             <Animated.View style={{position : 'absolute',
                           width : Dimensions.get('window').width,
                           height : Dimensions.get('window').height,
@@ -260,16 +273,20 @@ const Character = (props) => {
                           position : 'absolute'}}>
 
                 <Text>
-                    id:{props.id}<br/>
-                    action:{action}<br/>
-                    direction:{direction}<br/>
-                    image x offset:{-1 * characterConfig['offsets'][frameIndex] * props.spriteWidth}<br/>
-                    image y offset:{HEIGHT_OFFSET * props.spriteHeight}<br/>
-                    fps: {props.characterConfig[direction][action][FPS]}<br/>
-                    pps: {props.characterConfig[direction][action][PPS]}<br/>
-                    x: {getCurrentX()}<br/>
-                    y: {getCurrentY()}<br/>
+                    {/*
+                    id:{props.id}{"\n"}
+                    action:{action}{"\n"}
+                    direction:{direction}{"\n"}
+                    image x offset:{-1 * characterConfig['offsets'][frameIndex] * props.spriteWidth}{"\n"}
+                    image y offset:{HEIGHT_OFFSET * props.spriteHeight}{"\n"}
+                    fps: {props.characterConfig[direction][action][FPS]}{"\n"}
+                    pps: {props.characterConfig[direction][action][PPS]}{"\n"}
+                    x: {getCurrentX()}{"\n"}
+                    y: {getCurrentY()}{"\n"}
+                    mouseX: {mouseX}{"\n"}
+                    mouseY: {mouseY}{"\n"}
                     animationId: {animationId}
+                    */}
                 </Text>
                 <Image source={props.sheetImage}
                     style={{

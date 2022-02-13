@@ -17,10 +17,10 @@ const Game = () => {
         <GameContext.Provider value={state}>
         <View>
             <Character id={"monster"}
-                       spriteWidth={400}
-                       spriteHeight={400}
-                       sheetWidth={3200}
-                       sheetHeight={7200}
+                       spriteWidth={200}
+                       spriteHeight={200}
+                       sheetWidth={1600}
+                       sheetHeight={3600}
                        sheetImage={require('../assets/sprites/sprite.png')}
                        defaultDirection={"left"}
                        defaultPosition={"right"}
@@ -28,10 +28,10 @@ const Game = () => {
                        characterConfig={CHARACTER_CONFIG}/>
             {/* Character with bind clicks must be last so it overlaps other characters */}
             <Character id={"barbarian"}
-                       spriteWidth={400}
-                       spriteHeight={400}
-                       sheetWidth={3200}
-                       sheetHeight={7200}
+                       spriteWidth={200}
+                       spriteHeight={200}
+                       sheetWidth={1600}
+                       sheetHeight={3600}
                        sheetImage={require('../assets/sprites/sprite.png')}
                        defaultDirection={"right"}
                        defaultPosition={"left"}
