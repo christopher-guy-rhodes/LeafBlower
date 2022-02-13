@@ -34,7 +34,7 @@ const Game = () => {
                        sheetHeight={3600}
                        sheetImage={require('../assets/sprites/sprite.png')}
                        defaultDirection={"right"}
-                       defaultPosition={"left"}
+                       defaultPosition={"center"}
                        bindClicks={true}
                        characterConfig={CHARACTER_CONFIG}/>
         </View>

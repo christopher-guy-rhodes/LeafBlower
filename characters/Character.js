@@ -20,184 +20,6 @@ const Character = (props) => {
     const HEIGHT_OFFSET = props.characterConfig[direction][action]['heightOffset'];
 
     /**
-     * Animate the movement and sprite frames of the character.
-     *
-     * @param e the click event
-     * @param act the action to animate
-     * @param dir the direction the character is facing (left or right)
-     */
-    function animateCharacter(e, act, dir){
-        setAction(act);
-
-        setFrameIndex(0);
-        let characterConfig = props.characterConfig[dir][act];
-        setCharacterConfig(characterConfig);
-
-        Animated.timing(x, {useNativeDriver: false}).stop();
-        Animated.timing(y, {useNativeDriver: false}).stop();
-
-        // Animate the movement
-        if (characterConfig[PPS] > 0) {
-            let newCoordinate = getNewCoordinate(e, dir);
-            let duration = getDistanceToCoordinate(newCoordinate) / characterConfig[PPS] * 1000;
-
-            Animated.parallel([
-                    Animated.timing(
-                        x,
-                        {
-                            toValue: newCoordinate['x'],
-                            duration: duration,
-                            easing: Easing.linear,
-                            useNativeDriver: false
-                        }),
-                    Animated.timing(
-                        y,
-                        {
-                            toValue: newCoordinate['y'],
-                            duration: duration,
-                            easing: Easing.linear,
-                            useNativeDriver : false
-                        })
-
-                ]
-            ).start(({ finished }) => {
-                //clearInterval(animationId);
-            });
-        }
-
-        // Animate the frames
-        let index = 0;
-        let timeout = characterConfig[FPS] == 0 ? 0 : 1000 / characterConfig[FPS];
-        let animationId = setInterval(() => {
-
-            if (index > characterConfig['offsets'].length - 1) {
-                if (characterConfig['loop'] === false) {
-                    clearInterval(animationId);
-                    return;
-                } else {
-                    index = 0;
-                }
-            }
-            setFrameIndex(index);
-            index++;
-        }, timeout);
-        setAnimationId(animationId);
-    }
-
-
-    /**
-     * Get the distance from the current coordinate of the character to the given coordinate using the pythagorean
-     * theorem.
-     *
-     * @param coordinate the coordinate to calculate the distance to
-     * @returns {number} the distance
-     */
-    function getDistanceToCoordinate(coordinate) {
-        return Math.sqrt(Math.pow(Math.abs(coordinate['x'] - x._value), 2) +
-            Math.pow(Math.abs(coordinate['y'] - y._value), 2))
-    }
-
-    /**
-     * Get a new coordinate that is on the line formed from the current coordinate and the clicked coordinate. The
-     * most extreme values of x and y will be selected that are still on screen.
-     *
-     * @param e the click event
-     * @param direction the direction of the character
-     * @returns the new coordinate e.g. {{x: number, y: number}}
-     */
-    function getNewCoordinate(e, direction) {
-        let x1 = x._value;
-        let y1 = y._value;
-
-        let x2 = e.nativeEvent.pageX - props.spriteWidth / 2;
-        let y2 = e.nativeEvent.pageY - props.spriteHeight / 2;
-
-        let xBoundary = direction === RIGHT ? Dimensions.get('window').width - props.spriteWidth : 0;
-
-        // equation of the line : y = mx + b
-        let m = (y2 - y1) / (x2 - x1);
-        let b = y1 - m * x1;
-
-        let isClickOnTopPortion = y2 < y1;
-
-        // Get the value of x using the equation
-        let newX = isClickOnTopPortion ?  -b/m : (getBottomY() - b)/m;
-
-        // If x is off screen set it to the screen boundary
-        if (direction === RIGHT && newX > xBoundary) {
-            newX = Dimensions.get('window').width - props.spriteWidth;
-        } else if (direction === LEFT && newX < xBoundary) {
-            newX = 0;
-        }
-
-        // Get the value of y using the equation
-        let newY = m * newX + b;
-
-        // If y is off screen set it to the screen boundary
-        if (newY < 0) {
-            newY = 0;
-        } else if (y2 > getBottomY()) {
-            newY = getBottomY();
-        }
-
-        return {
-            x : newX,
-            y : newY,
-        };
-    }
-
-    /**
-     * Get the current x coordinate of the character
-     *
-     * @returns {number|*}
-     */
-    function getCurrentX() {
-        return (state['gameState']['positions'][props.id] === undefined)
-            ? 0
-            : state['gameState']['positions'][props.id]['x']._value;
-    }
-
-    /**
-     * Get the current y coordinate of the character
-     * @returns {number} the current value of y
-     */
-    function getCurrentY() {
-        return (state['gameState']['positions'][props.id] === undefined)
-            ? 0
-            : state['gameState']['positions'][props.id]['y']._value;
-    }
-
-    /**
-     * Get the y coordinate for the bottom of the screen
-     *
-     * @returns {number} the value of y at the bottom of the screen
-     */
-    function getBottomY() {
-        return Dimensions.get('window').height - props.spriteHeight;
-    }
-
-    /**
-     * Get the default value of the x coordinate based on the direction the character is facing
-     *
-     * @returns {number} the default value of x
-     */
-    function getDefaultX() {
-        let defaultX = undefined;
-        switch(props.defaultPosition) {
-            case RIGHT:
-                defaultX = Dimensions.get('window').width - props.spriteWidth;
-                break;
-            case LEFT:
-                defaultX = 0;
-                break;
-            default:
-                defaultX = (Dimensions.get('window').width - props.spriteWidth) / 2;
-                break;
-        }
-        return defaultX;
-    }
-
-    /**
      * Handle a press event
      * @param e the press event
      * @param pressType the type of press (long press, regular etc.)
@@ -230,8 +52,122 @@ const Character = (props) => {
         }
 
         clearInterval(animationId);
-        animateCharacter(e, act, dir);
+        animateCharacter(e.nativeEvent.pageX, e.nativeEvent.pageY, act, dir);
         setFrameIndex(0);
+    }
+
+
+    /**
+     * Animate the movement and sprite frames of the character.
+     *
+     * @param toX the x coordinate to go to
+     * @param toY the y coordinate to go to
+     * @param act the action to animate
+     * @param dir the direction the character is facing (left or right)
+     */
+    function animateCharacter(toX, toY, act, dir){
+        setAction(act);
+
+        setFrameIndex(0);
+        let characterConfig = props.characterConfig[dir][act];
+        setCharacterConfig(characterConfig);
+
+        if (!props.bindClicks) {
+            Animated.timing(x, {useNativeDriver: false}).stop();
+            Animated.timing(y, {useNativeDriver: false}).stop();
+        }
+
+        // Animate the movement
+        if (characterConfig[PPS] > 0 && !props.bindClicks) {
+            let duration = characterConfig[PPS] === 0
+                ? 0
+                : getDistanceToCoordinate(toX, toY) / characterConfig[PPS] * 1000;
+
+            Animated.parallel([
+                    Animated.timing(
+                        x,
+                        {
+                            toValue: toX,
+                            duration: duration,
+                            easing: Easing.linear,
+                            useNativeDriver: false
+                        }),
+                    Animated.timing(
+                        y,
+                        {
+                            toValue: toY,
+                            duration: duration,
+                            easing: Easing.linear,
+                            useNativeDriver : false
+                        })
+
+                ]
+            ).start(({ finished }) => {
+                clearInterval(animationId);
+            });
+        }
+
+        // Animate the frames
+        let index = 0;
+        let timeout = characterConfig[FPS] === 0 ? 0 : 1000 / characterConfig[FPS];
+        let animationId = setInterval(() => {
+
+            if (index > characterConfig['offsets'].length - 1) {
+                if (characterConfig['loop'] === false) {
+                    clearInterval(animationId);
+                    return;
+                } else {
+                    index = 0;
+                }
+            }
+            setFrameIndex(index);
+            index++;
+        }, timeout);
+        setAnimationId(animationId);
+    }
+
+
+    /**
+     * Get the distance from the current coordinate of the character to the given coordinate using the pythagorean
+     * theorem.
+     *
+     * @param toX the x coordinate to calculate the distance to
+     * @param toY the y coordinate to calculate the distance to
+     * @returns {number} the distance
+     */
+    function getDistanceToCoordinate(toX, toY) {
+        return Math.sqrt(Math.pow(Math.abs(toX - x._value), 2) +
+            Math.pow(Math.abs(toY - y._value), 2))
+    }
+
+    /**
+     * Get the y coordinate for the bottom of the screen
+     *
+     * @returns {number} the value of y at the bottom of the screen
+     */
+    function getBottomY() {
+        return Dimensions.get('window').height - props.spriteHeight;
+    }
+
+    /**
+     * Get the default value of the x coordinate based on the direction the character is facing
+     *
+     * @returns {number} the default value of x
+     */
+    function getDefaultX() {
+        let defaultX = undefined;
+        switch(props.defaultPosition) {
+            case RIGHT:
+                defaultX = Dimensions.get('window').width - props.spriteWidth;
+                break;
+            case LEFT:
+                defaultX = 0;
+                break;
+            default:
+                defaultX = (Dimensions.get('window').width - props.spriteWidth) / 2;
+                break;
+        }
+        return defaultX;
     }
 
     const state = useContext(GameContext);
@@ -246,6 +182,10 @@ const Character = (props) => {
         state['gameState']['positions'][props.id]['x'] = x;
         state['gameState']['positions'][props.id]['y'] = y;
         state.setGameState(state.gameState);
+
+        if (props.id === 'monster') {
+            animateCharacter(0, getBottomY() + props.spriteHeight - props.spriteHeight, 'walk', 'left');
+        }
     },[]);
 
     return (
@@ -255,8 +195,8 @@ const Character = (props) => {
                           width : Dimensions.get('window').width,
                           height : Dimensions.get('window').height,
                           userSelect: 'none',
-                          backgroundImage: `url(${backgroundImage})`,
-                          /*left : x*/}}>
+                          /*backgroundImage: `url(${backgroundImage})`,
+                          left : x*/}}>
             <Animated.View style={{width: props.spriteWidth,
                           height: props.spriteHeight,
                           overflow: 'hidden',
@@ -268,15 +208,17 @@ const Character = (props) => {
                 <Text>
                     {/*
                     id:{props.id}{"\n"}
+                    x: {x._value}{"\n"}
+                    y: {y._value}
                     action:{action}{"\n"}
                     direction:{direction}{"\n"}
                     image x offset:{-1 * characterConfig['offsets'][frameIndex] * props.spriteWidth}{"\n"}
                     image y offset:{HEIGHT_OFFSET * props.spriteHeight}{"\n"}
                     fps: {props.characterConfig[direction][action][FPS]}{"\n"}
                     pps: {props.characterConfig[direction][action][PPS]}{"\n"}
-                    x: {getCurrentX()}{"\n"}
-                    y: {getCurrentY()}{"\n"}
-                    animationId: {animationId}
+                    animationId: {animationId}{"\n"}
+                    state:{JSON.stringify(state)}
+
                     */}
                 </Text>
                 <Image source={props.sheetImage}
