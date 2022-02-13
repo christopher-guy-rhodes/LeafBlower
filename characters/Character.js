@@ -14,8 +14,7 @@ const Character = (props) => {
     const [characterConfig, setCharacterConfig] = useState(props.characterConfig[direction][action]);
     const [x] = useState(new Animated.Value(getDefaultX()));
     const [y] = useState(new Animated.Value(getBottomY()));
-    const [mouseX, setMouseX] = useState(0);
-    const [mouseY, setMouseY] = useState(0);
+
     const [clickEvent, setClickEvent] = useState(false);
 
     const HEIGHT_OFFSET = props.characterConfig[direction][action]['heightOffset'];
@@ -235,11 +234,6 @@ const Character = (props) => {
         setFrameIndex(0);
     }
 
-    function handleMouseMove(e) {
-        setMouseX(e.screenX);
-        setMouseY(e.screenY);
-    }
-
     const state = useContext(GameContext);
 
     // Set the shared state for the character as it moves around. Wrap in useEffect to run only wen the data changes and
@@ -256,14 +250,13 @@ const Character = (props) => {
 
     return (
         <Pressable onPress= {(e) => handlePress(e, SHORT_PRESS, animationId)}
-                   onLongPress={(e) => handlePress(e, LONG_PRESS, animationId)}
-                   onMouseMove={(e) => handleMouseMove(e)}>
+                   onLongPress={(e) => handlePress(e, LONG_PRESS, animationId)}>
             <Animated.View style={{position : 'absolute',
                           width : Dimensions.get('window').width,
                           height : Dimensions.get('window').height,
                           userSelect: 'none',
-                          /*backgroundImage: `url(${backgroundImage})`,
-                          left : x*/}}>
+                          backgroundImage: `url(${backgroundImage})`,
+                          /*left : x*/}}>
             <Animated.View style={{width: props.spriteWidth,
                           height: props.spriteHeight,
                           overflow: 'hidden',
@@ -283,8 +276,6 @@ const Character = (props) => {
                     pps: {props.characterConfig[direction][action][PPS]}{"\n"}
                     x: {getCurrentX()}{"\n"}
                     y: {getCurrentY()}{"\n"}
-                    mouseX: {mouseX}{"\n"}
-                    mouseY: {mouseY}{"\n"}
                     animationId: {animationId}
                     */}
                 </Text>
