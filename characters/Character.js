@@ -1,7 +1,8 @@
 import {React, useContext, useEffect, useState} from 'react';
 import {Animated, Dimensions, Easing, Image, Pressable, Text, View} from 'react-native';
 import {GameContext} from "../game/game-context";
-import {DOUBLE_CLICK, DOUBLE_CLICK_THRESHOLD_MS, FPS, LEFT, LONG_PRESS, PPS, RIGHT, SHORT_PRESS, STOP} from "../util/constants";
+import {BACKGROUND_SIZE_PX, DOUBLE_CLICK, DOUBLE_CLICK_THRESHOLD_MS, FPS, LEFT, LONG_PRESS, PPS, RIGHT, SHORT_PRESS,
+        STOP, WALK} from "../util/constants";
 import {ACTION_TRANSITIONS} from "./character-config";
 import backgroundImage from "../assets/backgrounds/scrolling-desert.png";
 
@@ -14,6 +15,8 @@ const Character = (props) => {
     const [characterConfig, setCharacterConfig] = useState(props.characterConfig[direction][action]);
     const [x] = useState(new Animated.Value(getDefaultX()));
     const [y] = useState(new Animated.Value(getBottomY()));
+    const [backgroundOffset, setBackgroundOffset] = useState(new Animated.Value(-1*BACKGROUND_SIZE_PX));
+    const [backgroundAnimation] = useState(0);
 
     const [clickEvent, setClickEvent] = useState(false);
 
@@ -77,6 +80,9 @@ const Character = (props) => {
             Animated.timing(y, {useNativeDriver: false}).stop();
         }
 
+        stopBackgroundAnimation();
+        animateBackground(act, dir);
+
         // Animate the movement
         if (characterConfig[PPS] > 0 && !props.bindClicks) {
             let duration = characterConfig[PPS] === 0
@@ -126,6 +132,42 @@ const Character = (props) => {
         setAnimationId(animationId);
     }
 
+    function stopBackgroundAnimation() {
+        Animated.timing(backgroundOffset, {useNativeDriver: false}).stop();
+    }
+
+    function animateBackground(action, direction) {
+
+        if (!props.bindClicks || action !== WALK) {
+            return;
+        }
+
+        let characterConfig = props.characterConfig[direction][action];
+        console.log('==> character config %o', characterConfig);
+
+        let pps = characterConfig[PPS];
+        let directionalSign = direction === RIGHT ? -1 : 1;
+        let toOffset = backgroundOffset._value + directionalSign * BACKGROUND_SIZE_PX;
+        let duration = BACKGROUND_SIZE_PX / pps * 1000;
+
+        console.log('from %s to %s', backgroundOffset._value, toOffset);
+
+        if (props.bindClicks) {
+            Animated.loop(
+            Animated.timing(
+                backgroundOffset,
+                {
+                    toValue: toOffset,
+                    duration: duration,
+                    easing: Easing.linear,
+                    useNativeDriver: false
+                }
+            )/*,{
+                iterations: 4
+            }*/).start();
+        }
+
+    }
 
     /**
      * Get the distance from the current coordinate of the character to the given coordinate using the pythagorean
@@ -183,53 +225,69 @@ const Character = (props) => {
         state['gameState']['positions'][props.id]['y'] = y;
         state.setGameState(state.gameState);
 
-        if (props.id === 'monster') {
-            animateCharacter(0, getBottomY() + props.spriteHeight - props.spriteHeight, 'walk', 'left');
+        if (props.id !== 'barbarian') {
+            animateCharacter(0, getBottomY() + props.spriteHeight - props.spriteHeight, WALK, 'left');
         }
+
     },[]);
 
     return (
+
         <Pressable onPress= {(e) => handlePress(e, SHORT_PRESS, animationId)}
-                   onLongPress={(e) => handlePress(e, LONG_PRESS, animationId)}>
-            <Animated.View style={{position : 'absolute',
-                          width : Dimensions.get('window').width,
-                          height : Dimensions.get('window').height,
-                          userSelect: 'none',
-                          /*backgroundImage: `url(${backgroundImage})`,
-                          left : x*/}}>
-            <Animated.View style={{width: props.spriteWidth,
-                          height: props.spriteHeight,
-                          overflow: 'hidden',
-                          border: '1px solid black',
-                          left : x,
-                          top  : y,
-                          position : 'absolute'}}>
+                   onLongPress={(e) => handlePress(e, LONG_PRESS, animationId)}
+                   style={{zIndex: props.bindClicks ? 0 : 1}}>
+            <View style={{
+                display: props.bindClicks ? 'block' : 'none',
+                width: 1334,
+                height: 750,
+                overflow: 'hidden',
+                border: '1px solid blue',
+                left : 0,
+                top  : 0,
+                position : 'absolute'}}>
+                <Animated.Image source={backgroundImage}
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: backgroundOffset,
+                                    // width is 3x for middle screen and left and right screens
+                                    width: 3 * BACKGROUND_SIZE_PX,
+                                    height: 750
+                                }}/>
+            </View>
 
-                <Text>
-                    {/*
-                    id:{props.id}{"\n"}
-                    x: {x._value}{"\n"}
-                    y: {y._value}
-                    action:{action}{"\n"}
-                    direction:{direction}{"\n"}
-                    image x offset:{-1 * characterConfig['offsets'][frameIndex] * props.spriteWidth}{"\n"}
-                    image y offset:{HEIGHT_OFFSET * props.spriteHeight}{"\n"}
-                    fps: {props.characterConfig[direction][action][FPS]}{"\n"}
-                    pps: {props.characterConfig[direction][action][PPS]}{"\n"}
-                    animationId: {animationId}{"\n"}
-                    state:{JSON.stringify(state)}
+                <Animated.View style={{width: props.spriteWidth,
+                              height: props.spriteHeight,
+                              overflow: 'hidden',
+                              border: '1px solid black',
+                              left : x,
+                              top  : y,
+                              position : 'absolute'}}>
 
-                    */}
-                </Text>
-                <Image source={props.sheetImage}
-                    style={{
-                        position: 'absolute',
-                        top: -1 * HEIGHT_OFFSET * props.spriteHeight,
-                        left: -1 * characterConfig['offsets'][frameIndex] * props.spriteWidth,
-                        width: props.sheetWidth,
-                        height: props.sheetHeight }} />
-            </Animated.View>
-            </Animated.View>
+                    <Text>
+                        {/*
+                        id:{props.id}{"\n"}
+                        x: {x._value}{"\n"}
+                        y: {y._value}
+                        action:{action}{"\n"}
+                        direction:{direction}{"\n"}
+                        image x offset:{-1 * characterConfig['offsets'][frameIndex] * props.spriteWidth}{"\n"}
+                        image y offset:{HEIGHT_OFFSET * props.spriteHeight}{"\n"}
+                        fps: {props.characterConfig[direction][action][FPS]}{"\n"}
+                        pps: {props.characterConfig[direction][action][PPS]}{"\n"}
+                        animationId: {animationId}{"\n"}
+                        state:{JSON.stringify(state)}
+
+                        */}
+                    </Text>
+                    <Image source={props.sheetImage}
+                        style={{
+                            position: 'absolute',
+                            top: -1 * HEIGHT_OFFSET * props.spriteHeight,
+                            left: -1 * characterConfig['offsets'][frameIndex] * props.spriteWidth,
+                            width: props.sheetWidth,
+                            height: props.sheetHeight}} />
+                </Animated.View>
         </Pressable>
     );
 }
