@@ -61,11 +61,16 @@ const Character = (props) => {
         if (direction === RIGHT && e.nativeEvent.pageX < (x._value + props.spriteWidth / 2)) {
                 dir = LEFT;
                 setDirection(dir);
+
+                console.log('changing direction from right to left background offset is %s new offset should be %s', backgroundOffset._value, backgroundOffset._value - BACKGROUND_SIZE_PX);
+                setBackgroundOffset(new Animated.Value(backgroundOffset._value - BACKGROUND_SIZE_PX));
                 //act = action;
                 //act = STOP;
         } else if (direction == LEFT && e.nativeEvent.pageX >= (x._value + props.spriteWidth / 2)) {
                 dir = RIGHT;
                 setDirection(dir);
+            console.log('changing direction from left to right background offset is %s new offset should be', backgroundOffset._value + BACKGROUND_SIZE_PX);
+                setBackgroundOffset(new Animated.Value(backgroundOffset._value + BACKGROUND_SIZE_PX));
                 //act = action;
                 //act = STOP;
         }
@@ -180,7 +185,20 @@ const Character = (props) => {
                 }
             )).start(({ finished }) => {
                 console.log('finished setting offset to ' + backgroundOffset._value);
-                setBackgroundOffset(new Animated.Value(backgroundOffset._value));
+
+                if (direction === RIGHT && backgroundOffset._value < -1*BACKGROUND_SIZE_PX) {
+                    if (backgroundOffset._value < -1*BACKGROUND_SIZE_PX) {
+                        console.log('moved to the right of center (%s), reset background offset to%s', backgroundOffset._value, backgroundOffset._value + BACKGROUND_SIZE_PX);
+                        setBackgroundOffset(new Animated.Value(backgroundOffset._value + BACKGROUND_SIZE_PX));
+                    }
+                } else if (direction === LEFT && backgroundOffset._value > -1*BACKGROUND_SIZE_PX) {
+                    console.log('moved to the left of center (%s), reset background offset to %s', backgroundOffset._value, backgroundOffset._value - BACKGROUND_SIZE_PX);
+                    setBackgroundOffset(new Animated.Value(backgroundOffset._value - BACKGROUND_SIZE_PX));
+                } else {
+                    setBackgroundOffset(new Animated.Value(backgroundOffset._value));
+                }
+
+
                 clearInterval(animationId);
             });
         }
