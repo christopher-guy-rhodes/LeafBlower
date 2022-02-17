@@ -15,8 +15,8 @@ const Character = (props) => {
     const [characterConfig, setCharacterConfig] = useState(props.characterConfig[direction][action]);
     const [x] = useState(new Animated.Value(getDefaultX()));
     const [y] = useState(new Animated.Value(getBottomY()));
+
     const [backgroundOffset, setBackgroundOffset] = useState(new Animated.Value(-1*BACKGROUND_SIZE_PX));
-    const [backgroundAnimation] = useState(0);
 
     const [clickEvent, setClickEvent] = useState(false);
 
@@ -45,13 +45,15 @@ const Character = (props) => {
         let didChangeDirection = false;
 
         if (direction === RIGHT && e.nativeEvent.pageX < (x._value + props.spriteWidth / 2)) {
-            dir = LEFT;
-            setDirection(dir);
-            act = action;
+                dir = LEFT;
+                setDirection(dir);
+                //act = action;
+                act = STOP;
         } else if (direction == LEFT && e.nativeEvent.pageX >= (x._value + props.spriteWidth / 2)) {
-            dir = RIGHT;
-            setDirection(dir);
-            act = action;
+                dir = RIGHT;
+                setDirection(dir);
+                //act = action;
+                act = STOP;
         }
 
         clearInterval(animationId);
@@ -143,16 +145,16 @@ const Character = (props) => {
         }
 
         let characterConfig = props.characterConfig[direction][action];
-        console.log('==> character config %o', characterConfig);
 
         let pps = characterConfig[PPS];
         let directionalSign = direction === RIGHT ? -1 : 1;
         let toOffset = backgroundOffset._value + directionalSign * BACKGROUND_SIZE_PX;
         let duration = BACKGROUND_SIZE_PX / pps * 1000;
 
-        console.log('from %s to %s', backgroundOffset._value, toOffset);
 
         if (props.bindClicks) {
+            console.log('%s from %s to %s',action, backgroundOffset._value, toOffset);
+
             Animated.loop(
             Animated.timing(
                 backgroundOffset,
@@ -162,9 +164,11 @@ const Character = (props) => {
                     easing: Easing.linear,
                     useNativeDriver: false
                 }
-            )/*,{
-                iterations: 4
-            }*/).start();
+            )).start(({ finished }) => {
+                console.log('finished setting offset to ' + backgroundOffset._value);
+                setBackgroundOffset(new Animated.Value(backgroundOffset._value));
+                clearInterval(animationId);
+            });
         }
 
     }
@@ -237,9 +241,9 @@ const Character = (props) => {
                    onLongPress={(e) => handlePress(e, LONG_PRESS, animationId)}
                    style={{zIndex: props.bindClicks ? 0 : 1}}>
             <View style={{
-                display: props.bindClicks ? 'block' : 'none',
-                width: 1334,
-                height: 750,
+                /*display: props.bindClicks ? 'flex' : 'none',*/
+                width: props.bindClicks ? 1334 : 0,
+                height: props.bindClicks ? 750 : 0,
                 overflow: 'hidden',
                 border: '1px solid blue',
                 left : 0,
@@ -265,6 +269,7 @@ const Character = (props) => {
                               position : 'absolute'}}>
 
                     <Text>
+                        backgroundOffset: {backgroundOffset._value}{"\n"}
                         {/*
                         id:{props.id}{"\n"}
                         x: {x._value}{"\n"}
