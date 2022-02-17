@@ -65,14 +65,14 @@ const Character = (props) => {
                 console.log('changing direction from right to left background offset is %s new offset should be %s', backgroundOffset._value, backgroundOffset._value - BACKGROUND_SIZE_PX);
                 setBackgroundOffset(new Animated.Value(backgroundOffset._value - BACKGROUND_SIZE_PX));
                 //act = action;
-                //act = STOP;
+                act = STOP;
         } else if (direction == LEFT && e.nativeEvent.pageX >= (x._value + props.spriteWidth / 2)) {
                 dir = RIGHT;
                 setDirection(dir);
             console.log('changing direction from left to right background offset is %s new offset should be', backgroundOffset._value + BACKGROUND_SIZE_PX);
                 setBackgroundOffset(new Animated.Value(backgroundOffset._value + BACKGROUND_SIZE_PX));
                 //act = action;
-                //act = STOP;
+                act = STOP;
         }
 
         clearInterval(animationId);
