@@ -1,8 +1,8 @@
 import {React, useContext, useEffect, useState} from 'react';
 import {Animated, Dimensions, Easing, Image, Pressable, Text, View} from 'react-native';
 import {GameContext} from "../game/game-context";
-import {BACKGROUND_SIZE_PX, DOUBLE_CLICK, DOUBLE_CLICK_THRESHOLD_MS, FPS, LEFT, LONG_PRESS, PPS, RIGHT, SHORT_PRESS,
-        STOP, WALK} from "../util/constants";
+import {ATTACK, BACKGROUND_SIZE_PX, DOUBLE_CLICK, DOUBLE_CLICK_THRESHOLD_MS, FPS, LEFT, LONG_PRESS, PPS, PRESS_OUT,
+    RIGHT, SHORT_PRESS, STOP, WALK} from "../util/constants";
 import {ACTION_TRANSITIONS} from "./character-config";
 import backgroundImage from "../assets/backgrounds/scrolling-desert.png";
 
@@ -34,12 +34,26 @@ const Character = (props) => {
             return;
         }
 
-        let act = ACTION_TRANSITIONS[clickEvent ? DOUBLE_CLICK : pressType][action];
+        //let act = ACTION_TRANSITIONS[clickEvent ? DOUBLE_CLICK : pressType][action];
+        let act;
+        switch (pressType) {
+            case LONG_PRESS:
+                act = WALK;
+                break;
+            case PRESS_OUT:
+                default:
+                act = STOP;
+                break;
+        }
 
         setClickEvent(true);
         setTimeout(function () {
             setClickEvent(false);
         }, DOUBLE_CLICK_THRESHOLD_MS);
+
+        if (clickEvent) {
+            act = ATTACK;
+        }
 
         let dir = direction;
         let didChangeDirection = false;
@@ -48,12 +62,12 @@ const Character = (props) => {
                 dir = LEFT;
                 setDirection(dir);
                 //act = action;
-                act = STOP;
+                //act = STOP;
         } else if (direction == LEFT && e.nativeEvent.pageX >= (x._value + props.spriteWidth / 2)) {
                 dir = RIGHT;
                 setDirection(dir);
                 //act = action;
-                act = STOP;
+                //act = STOP;
         }
 
         clearInterval(animationId);
@@ -237,8 +251,9 @@ const Character = (props) => {
 
     return (
 
-        <Pressable onPress= {(e) => handlePress(e, SHORT_PRESS, animationId)}
+        <Pressable /*onPress= {(e) => handlePress(e, SHORT_PRESS, animationId)}*/
                    onLongPress={(e) => handlePress(e, LONG_PRESS, animationId)}
+                   onPressOut={(e) => handlePress(e, 'pressOut', animationId)}
                    style={{zIndex: props.bindClicks ? 0 : 1}}>
             <View style={{
                 /*display: props.bindClicks ? 'flex' : 'none',*/
@@ -269,8 +284,8 @@ const Character = (props) => {
                               position : 'absolute'}}>
 
                     <Text>
-                        backgroundOffset: {backgroundOffset._value}{"\n"}
                         {/*
+                        backgroundOffset: {backgroundOffset._value}{"\n"}
                         id:{props.id}{"\n"}
                         x: {x._value}{"\n"}
                         y: {y._value}
