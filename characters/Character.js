@@ -56,8 +56,8 @@ const Character = (props) => {
         }
 
         let dir = direction;
-        let didChangeDirection = false;
 
+        /*
         if (direction === RIGHT && e.nativeEvent.pageX < (x._value + props.spriteWidth / 2)) {
                 dir = LEFT;
                 setDirection(dir);
@@ -74,12 +74,31 @@ const Character = (props) => {
                 //act = action;
                 act = STOP;
         }
+        */
 
         clearInterval(animationId);
         animateCharacter(e.nativeEvent.pageX, e.nativeEvent.pageY, act, dir);
         setFrameIndex(0);
     }
 
+    function handlePressIn(e) {
+        if (direction === RIGHT && e.nativeEvent.pageX < (x._value + props.spriteWidth / 2)) {
+            //dir = LEFT;
+            setDirection(LEFT);
+
+            //console.log('changing direction from right to left background offset is %s new offset should be %s', backgroundOffset._value, backgroundOffset._value - BACKGROUND_SIZE_PX);
+            setBackgroundOffset(new Animated.Value(backgroundOffset._value - BACKGROUND_SIZE_PX));
+            //act = action;
+            //act = STOP;
+        } else if (direction == LEFT && e.nativeEvent.pageX >= (x._value + props.spriteWidth / 2)) {
+            //dir = RIGHT;
+            setDirection(RIGHT);
+            //console.log('changing direction from left to right background offset is %s new offset should be', backgroundOffset._value + BACKGROUND_SIZE_PX);
+            setBackgroundOffset(new Animated.Value(backgroundOffset._value + BACKGROUND_SIZE_PX));
+            //act = action;
+            //act = STOP;
+        }
+    }
 
     /**
      * Animate the movement and sprite frames of the character.
@@ -172,7 +191,7 @@ const Character = (props) => {
 
 
         if (props.bindClicks) {
-            console.log('%s from %s to %s',action, backgroundOffset._value, toOffset);
+            //console.log('%s from %s to %s',action, backgroundOffset._value, toOffset);
 
             Animated.loop(
             Animated.timing(
@@ -272,6 +291,7 @@ const Character = (props) => {
         <Pressable /*onPress= {(e) => handlePress(e, SHORT_PRESS, animationId)}*/
                    onLongPress={(e) => handlePress(e, LONG_PRESS, animationId)}
                    onPressOut={(e) => handlePress(e, 'pressOut', animationId)}
+                   onPressIn={(e) => handlePressIn(e, animationId)}
                    style={{zIndex: props.bindClicks ? 0 : 1}}>
             <View style={{
                 /*display: props.bindClicks ? 'flex' : 'none',*/

@@ -9,7 +9,6 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "orientation": "landscape",
     "updates": {
       "fallbackToCacheTimeout": 0
     },
@@ -17,7 +16,7 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
+      "requireFullScreen": true,
       "bundleIdentifier": "rhodes.gamee.leafblower"
     },
     "android": {
