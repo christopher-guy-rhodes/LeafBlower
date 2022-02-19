@@ -5,3 +5,5 @@ export const GameContext = React.createContext({
     },
     setTheme: (theme) => {}
 });
+
+export default GameContext

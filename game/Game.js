@@ -1,33 +1,26 @@
-import {React, useState} from 'react';
-import { View, Text, Image, ScrollView, TextInput } from 'react-native';
-import {CHARACTER_CONFIG} from "../characters/character-config";
 import Character from "../characters/Character";
-import {GameContext} from "./game-context";
-import * as ScreenOrientation from 'expo-screen-orientation'
+import * as ScreenOrientation from 'expo-screen-orientation';
+import GameContext from "./game-context";
+import CHARACTER_CONFIG from "../characters/character-config";
+import {View} from 'react-native';
+import React, {useState} from 'react';
+
+const LANDSCAPE_ORIENTATIONS =
+    [ScreenOrientation.Orientation.LANDSCAPE_LEFT, ScreenOrientation.Orientation.LANDSCAPE_RIGHT];
 
 const Game = () => {
 
-    //const [orientationIsLandscape,setOrientation]=useState(true)
-
-    //ScreenOrientation.getOrientationAsync().then(function(res) {console.log('orientation %s', res)});
-    //ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-
-    ScreenOrientation.addOrientationChangeListener( (event) => {
-            console.log("orientation changed to %o is it %s or %s", event.orientationInfo.orientation, ScreenOrientation.Orientation.LANDSCAPE_LEFT, ScreenOrientation.Orientation.LANDSCAPE_RIGHT);
-            if (event.orientationInfo.orientation === ScreenOrientation.Orientation.LANDSCAPE_LEFT || event.orientationInfo.orientation === ScreenOrientation.Orientation.LANDSCAPE_RIGHT) {
-                console.log('yes');
-                ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-
-            }
+    ScreenOrientation.addOrientationChangeListener((event) => {
+        if (LANDSCAPE_ORIENTATIONS.includes(event.orientationInfo.orientation)) {
+            ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).then(e => {});
         }
-    );
+    });
 
     function setGameState(gameState) {
         setState({gameState: gameState});
     }
 
-    const [state, setState] = useState(
-        {gameState: { positions : {}}, setGameState : setGameState});
+    const [state, setState] = useState({gameState: { positions : {}}, setGameState : setGameState});
 
     return (
         <GameContext.Provider value={state}>

@@ -30,7 +30,6 @@ const Character = (props) => {
      */
     function handlePress(e, pressType, animationId) {
         if (!props.bindClicks) {
-            console.log('clicks are not bound on ' + props.id)
             return;
         }
 
@@ -82,6 +81,10 @@ const Character = (props) => {
     }
 
     function handlePressIn(e) {
+        if (!props.bindClicks) {
+            return;
+        }
+
         if (direction === RIGHT && e.nativeEvent.pageX < (x._value + props.spriteWidth / 2)) {
             //dir = LEFT;
             setDirection(LEFT);
@@ -191,7 +194,6 @@ const Character = (props) => {
 
 
         if (props.bindClicks) {
-            //console.log('%s from %s to %s',action, backgroundOffset._value, toOffset);
 
             Animated.loop(
             Animated.timing(
@@ -203,15 +205,12 @@ const Character = (props) => {
                     useNativeDriver: false
                 }
             )).start(({ finished }) => {
-                console.log('finished setting offset to ' + backgroundOffset._value);
 
                 if (direction === RIGHT && backgroundOffset._value < -1*BACKGROUND_SIZE_PX) {
                     if (backgroundOffset._value < -1*BACKGROUND_SIZE_PX) {
-                        console.log('moved to the right of center (%s), reset background offset to%s', backgroundOffset._value, backgroundOffset._value + BACKGROUND_SIZE_PX);
                         setBackgroundOffset(new Animated.Value(backgroundOffset._value + BACKGROUND_SIZE_PX));
                     }
                 } else if (direction === LEFT && backgroundOffset._value > -1*BACKGROUND_SIZE_PX) {
-                    console.log('moved to the left of center (%s), reset background offset to %s', backgroundOffset._value, backgroundOffset._value - BACKGROUND_SIZE_PX);
                     setBackgroundOffset(new Animated.Value(backgroundOffset._value - BACKGROUND_SIZE_PX));
                 } else {
                     setBackgroundOffset(new Animated.Value(backgroundOffset._value));
@@ -286,40 +285,43 @@ const Character = (props) => {
 
     },[]);
 
-    return (
+        if (props.bindClicks) {
+            return (
+            <Pressable /*onPress= {(e) => handlePress(e, SHORT_PRESS, animationId)}*/
+                onLongPress={(e) => handlePress(e, LONG_PRESS, animationId)}
+                onPressOut={(e) => handlePress(e, 'pressOut', animationId)}
+                onPressIn={(e) => handlePressIn(e, animationId)}
+                style={{zIndex: 0}}>
+                <View style={{
+                    /*display: props.bindClicks ? 'flex' : 'none',*/
+                    width: props.bindClicks ? 1334 : 0,
+                    height: props.bindClicks ? 750 : 0,
+                    overflow: 'hidden',
+                    border: '10px solid green',
+                    left: 0,
+                    top: 0,
+                    position: 'absolute'
+                }}>
+                    <Animated.Image source={backgroundImage}
+                                    style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: backgroundOffset,
+                                        // width is 3x for middle screen and left and right screens
+                                        width: 3 * BACKGROUND_SIZE_PX,
+                                        height: 750
+                                    }}/>
+                </View>
 
-        <Pressable /*onPress= {(e) => handlePress(e, SHORT_PRESS, animationId)}*/
-                   onLongPress={(e) => handlePress(e, LONG_PRESS, animationId)}
-                   onPressOut={(e) => handlePress(e, 'pressOut', animationId)}
-                   onPressIn={(e) => handlePressIn(e, animationId)}
-                   style={{zIndex: props.bindClicks ? 0 : 1}}>
-            <View style={{
-                /*display: props.bindClicks ? 'flex' : 'none',*/
-                width: props.bindClicks ? 1334 : 0,
-                height: props.bindClicks ? 750 : 0,
-                overflow: 'hidden',
-                border: '1px solid blue',
-                left : 0,
-                top  : 0,
-                position : 'absolute'}}>
-                <Animated.Image source={backgroundImage}
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: backgroundOffset,
-                                    // width is 3x for middle screen and left and right screens
-                                    width: 3 * BACKGROUND_SIZE_PX,
-                                    height: 750
-                                }}/>
-            </View>
-
-                <Animated.View style={{width: props.spriteWidth,
-                              height: props.spriteHeight,
-                              overflow: 'hidden',
-                              border: '1px solid black',
-                              left : x,
-                              top  : y,
-                              position : 'absolute'}}>
+                <Animated.View style={{
+                    width: props.spriteWidth,
+                    height: props.spriteHeight,
+                    overflow: 'hidden',
+                    border: '1px solid black',
+                    left: x,
+                    top: y,
+                    position: 'absolute'
+                }}>
 
                     <Text>
                         {/*
@@ -339,15 +341,39 @@ const Character = (props) => {
                         */}
                     </Text>
                     <Image source={props.sheetImage}
-                        style={{
-                            position: 'absolute',
-                            top: -1 * HEIGHT_OFFSET * props.spriteHeight,
-                            left: -1 * characterConfig['offsets'][frameIndex] * props.spriteWidth,
-                            width: props.sheetWidth,
-                            height: props.sheetHeight}} />
+                           style={{
+                               position: 'absolute',
+                               top: -1 * HEIGHT_OFFSET * props.spriteHeight,
+                               left: -1 * characterConfig['offsets'][frameIndex] * props.spriteWidth,
+                               width: props.sheetWidth,
+                               height: props.sheetHeight
+                           }}/>
                 </Animated.View>
-        </Pressable>
-    );
+            </Pressable>);
+        } else {
+            return (
+                <View pointerEvents={'none'} style={{zIndex: 1, pointerEvents: 'none'}}>
+
+                    <Animated.View style={{
+                        width: props.spriteWidth,
+                        height: props.spriteHeight,
+                        overflow: 'hidden',
+                        border: '1px solid black',
+                        left: x,
+                        top: y,
+                        position: 'absolute'
+                    }}>
+                        <Image source={props.sheetImage}
+                               style={{
+                                   position: 'absolute',
+                                   top: -1 * HEIGHT_OFFSET * props.spriteHeight,
+                                   left: -1 * characterConfig['offsets'][frameIndex] * props.spriteWidth,
+                                   width: props.sheetWidth,
+                                   height: props.sheetHeight
+                               }}/>
+                    </Animated.View>
+                </View>);
+        }
 }
 
 export default Character;
