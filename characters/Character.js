@@ -5,6 +5,10 @@ import {ATTACK, BACKGROUND_SIZE_PX, DOUBLE_CLICK, DOUBLE_CLICK_THRESHOLD_MS, FPS
     RIGHT, SHORT_PRESS, STOP, WALK, SCROLLING_ACTIONS} from "../util/constants";
 import {ACTION_TRANSITIONS} from "./character-config";
 import backgroundImage from "../assets/backgrounds/scrolling-desert.png";
+import * as ScreenOrientation from 'expo-screen-orientation';
+
+const LANDSCAPE_ORIENTATIONS =
+    [ScreenOrientation.Orientation.LANDSCAPE_LEFT, ScreenOrientation.Orientation.LANDSCAPE_RIGHT];
 
 const Character = (props) => {
     const [frameIndex, setFrameIndex] = useState(0);
@@ -12,10 +16,11 @@ const Character = (props) => {
     const [action, setAction] = useState(STOP);
     const [direction, setDirection] = useState(props.defaultDirection);
     const [characterConfig, setCharacterConfig] = useState(props.characterConfig[direction][action]);
-    const [x] = useState(new Animated.Value(getDefaultX()));
-    const [y] = useState(new Animated.Value(getBottomY()));
+    const [x, setX] = useState(new Animated.Value(getDefaultX()));
+    const [y, setY] = useState(new Animated.Value(getBottomY()));
     const [backgroundOffset, setBackgroundOffset] = useState(new Animated.Value(-1*BACKGROUND_SIZE_PX));
     const [clickEvent, setClickEvent] = useState(false);
+    const [screenHeight, setScreenHeight] = useState(Dimensions.get('window').height);
 
     const HEIGHT_OFFSET = props.characterConfig[direction][action]['heightOffset'];
 
@@ -111,8 +116,6 @@ const Character = (props) => {
      * @param pps the pixels per second to move at
      */
     function animateCharacterMovement(toX, toY, animationId, pps) {
-        Animated.timing(x, {useNativeDriver: false}).stop();
-        Animated.timing(y, {useNativeDriver: false}).stop();
 
         if (pps > 0 && !props.bindClicks) {
             let duration = pps === 0
@@ -225,9 +228,10 @@ const Character = (props) => {
      * @returns {boolean} true if the character is changing direction to testDir, false otherwise.
      */
     function isChangingDirectionTo(e, testDir) {
+        let xValue = x._value !== undefined ? x._value : getDefaultX();
         return testDir === LEFT
-            ? direction === RIGHT && e.nativeEvent.pageX < x._value + props.spriteWidth / 2
-            : direction === LEFT && e.nativeEvent.pageX >= x._value + props.spriteWidth / 2;
+            ? direction === RIGHT && e.nativeEvent.pageX < xValue + props.spriteWidth / 2
+            : direction === LEFT && e.nativeEvent.pageX >= xValue + props.spriteWidth / 2;
     }
 
     /**
@@ -265,19 +269,8 @@ const Character = (props) => {
      * @returns {number} the default value of x
      */
     function getDefaultX() {
-        let defaultX = undefined;
-        switch(props.defaultPosition) {
-            case RIGHT:
-                defaultX = Dimensions.get('window').width - props.spriteWidth;
-                break;
-            case LEFT:
-                defaultX = 0;
-                break;
-            default:
-                defaultX = (Dimensions.get('window').width - props.spriteWidth) / 2;
-                break;
-        }
-        return defaultX;
+        return props.defaultPosition === undefined ? (Dimensions.get('window').width - props.spriteWidth) / 2
+                                                   : props.defaultPosition;
     }
 
     const state = useContext(GameContext);
@@ -286,16 +279,30 @@ const Character = (props) => {
     // not on every component prop update
     useEffect(() => {
         if (state['gameState']['positions'][props.id] === undefined) {
-            state['gameState']['positions'][props.id] = {x : 0, y : 0};
+            state['gameState']['positions'][props.id] = {x : 0, y : 0, direction : ''};
         }
 
         state['gameState']['positions'][props.id]['x'] = x;
         state['gameState']['positions'][props.id]['y'] = y;
+
         state.setGameState(state.gameState);
 
         if (props.id !== 'barbarian') {
             animateCharacter(0, getBottomY() + props.spriteHeight - props.spriteHeight, WALK, 'left');
         }
+
+        ScreenOrientation.addOrientationChangeListener((event) => {
+            setScreenHeight(Dimensions.get('window').height);
+            if (props.bindClicks) {
+                setX(getDefaultX());
+            }
+            setY(getBottomY());
+
+            if (props.id !== 'barbarian') {
+                animateCharacter(0, getBottomY() + props.spriteHeight - props.spriteHeight, WALK, 'left');
+            }
+
+        });
 
     },[]);
 
@@ -308,10 +315,10 @@ const Character = (props) => {
             style={{zIndex: props.bindClicks ? 0 : 1}}>
             <View style={{
                 width: props.bindClicks ? 1334 : 0,
-                height: props.bindClicks ? Math.min(750, Dimensions.get('window').height) : 0,
+                height: props.bindClicks ? Math.min(750, screenHeight) : 0,
                 overflow: 'hidden',
                 left: 0,
-                top: 0,
+                top: Math.max(0, screenHeight - 750),
                 position: 'absolute'
             }}>
                 <Animated.Image source={backgroundImage}
@@ -321,7 +328,7 @@ const Character = (props) => {
                                     left: backgroundOffset,
                                     // width is 3x for middle screen and left and right screensgree
                                     width: 3 * BACKGROUND_SIZE_PX,
-                                    height: Math.min(750, Dimensions.get('window').height)
+                                    height: Math.min(750, screenHeight)
                                 }}/>
             </View>
 
@@ -336,9 +343,7 @@ const Character = (props) => {
             }}>
 
                 <Text>
-                    {/*
                     state:{JSON.stringify(state)}
-                    */}
                 </Text>
                 <Image source={props.sheetImage}
                        style={{
