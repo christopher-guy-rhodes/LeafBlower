@@ -307,11 +307,9 @@ const Character = (props) => {
             pointerEvents={props.bindClicks ? 'auto' : 'none'}
             style={{zIndex: props.bindClicks ? 0 : 1}}>
             <View style={{
-                /*display: props.bindClicks ? 'flex' : 'none',*/
                 width: props.bindClicks ? 1334 : 0,
-                height: props.bindClicks ? 750 : 0,
+                height: props.bindClicks ? Math.min(750, Dimensions.get('window').height) : 0,
                 overflow: 'hidden',
-                border: '10px solid green',
                 left: 0,
                 top: 0,
                 position: 'absolute'
@@ -321,9 +319,9 @@ const Character = (props) => {
                                     position: 'absolute',
                                     top: 0,
                                     left: backgroundOffset,
-                                    // width is 3x for middle screen and left and right screens
+                                    // width is 3x for middle screen and left and right screensgree
                                     width: 3 * BACKGROUND_SIZE_PX,
-                                    height: 750
+                                    height: Math.min(750, Dimensions.get('window').height)
                                 }}/>
             </View>
 
