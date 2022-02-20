@@ -1,6 +1,8 @@
 const STOP = 'stop';
 const WALK = 'walk';
+const RUN = 'run';
 const ATTACK = 'attack';
+const SCROLLING_ACTIONS = [WALK, RUN];
 
 const RIGHT = 'right';
 const LEFT = 'left';
@@ -17,4 +19,4 @@ const PPS = 'pps';
 const FPS = 'fps';
 
 export {ATTACK, BACKGROUND_SIZE_PX, DOUBLE_CLICK, DOUBLE_CLICK_THRESHOLD_MS, FPS, LEFT, LONG_PRESS, PPS, PRESS_OUT,
-    RIGHT, SHORT_PRESS, STOP, WALK}
+    RIGHT, RUN, SCROLLING_ACTIONS, SHORT_PRESS, STOP, WALK}
