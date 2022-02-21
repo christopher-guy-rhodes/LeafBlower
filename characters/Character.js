@@ -76,11 +76,22 @@ const Character = (props) => {
         setFrameIndex(0);
 
         let characterConfig = props.characterConfig[dir][act];
+        setBackgroundFps(act, characterConfig);
         setCharacterConfig(characterConfig);
 
         animateBackground(act, dir);
         let spriteAnimationId = animateCharacterSprite(characterConfig);
         animateCharacterMovement(toX, toY, spriteAnimationId, characterConfig[PPS]);
+    }
+
+    function setBackgroundFps(act, characterConfig) {
+        if (props.bindClicks) {
+            if (backgroundInfo['backgroundInfo'] === undefined) {
+                backgroundInfo['backgroundInfo'] = {'fps' : 0, 'direction': dir === LEFT ? RIGHT : LEFT};
+            }
+            backgroundInfo['backgroundInfo']['fps'] = characterConfig[FPS];
+            backgroundInfo.setBackgroundDetail(backgroundInfo.backgroundInfo);
+        }
     }
 
     /**
@@ -215,8 +226,9 @@ const Character = (props) => {
      */
     function setBackgroundDirection(dir) {
         if (props.bindClicks) {
+
             if (backgroundInfo['backgroundInfo'] === undefined) {
-                backgroundInfo['backgroundInfo'] = {'direction': dir === LEFT ? RIGHT : LEFT};
+                backgroundInfo['backgroundInfo'] = {'fps' : 0, 'direction': dir === LEFT ? RIGHT : LEFT};
             }
             backgroundInfo['backgroundInfo']['direction'] = dir === LEFT ? RIGHT : LEFT;
             backgroundInfo.setBackgroundDetail(backgroundInfo.backgroundInfo);
