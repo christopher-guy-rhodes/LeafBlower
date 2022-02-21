@@ -71,39 +71,45 @@ const Character = (props) => {
      * @param act the action to animate
      * @param dir the direction the character is facing (left or right)
      */
-    function animateCharacter(toX, toY, act, dir){
+    function animateCharacter(toX, toY, act, dir, fpsAdjust = 0){
         setAction(act);
         setFrameIndex(0);
 
         let characterConfig = props.characterConfig[dir][act];
-        setBackgroundFps(act, characterConfig);
+        setBackgroundPps(act, characterConfig);
         setCharacterConfig(characterConfig);
 
         animateBackground(act, dir);
-        let spriteAnimationId = animateCharacterSprite(characterConfig);
-        animateCharacterMovement(toX, toY, spriteAnimationId, characterConfig[PPS]);
+        let spriteAnimationId = animateCharacterSprite(toX, toY, act, dir, characterConfig);
+        animateCharacterMovement(toX, toY, spriteAnimationId, characterConfig[PPS] + fpsAdjust);
     }
 
-    function setBackgroundFps(act, characterConfig) {
+    function setBackgroundPps(act, characterConfig) {
         if (props.bindClicks) {
             if (backgroundInfo['backgroundInfo'] === undefined) {
-                backgroundInfo['backgroundInfo'] = {'fps' : 0, 'direction': dir === LEFT ? RIGHT : LEFT};
+                backgroundInfo['backgroundInfo'] = {'pps' : 0, 'direction': dir === LEFT ? RIGHT : LEFT};
             }
-            backgroundInfo['backgroundInfo']['fps'] = characterConfig[FPS];
+            backgroundInfo['backgroundInfo']['pps'] = characterConfig[PPS];
             backgroundInfo.setBackgroundDetail(backgroundInfo.backgroundInfo);
         }
     }
 
     /**
      * Animate a sprite given a character configuration that includes the frame offsets, frames per second and loop
-     * configuration.
+     * configuration. Looks for changes in the background movement to adjust the pixels per second to account for
+     * the illusion of movement of the character due to the background motion caused by the main character "moving".
      *
+     * @param toX the x coordinate to move to
+     * @param toY the y coordinate to move to
+     * @param act the action to animate
+     * @param dir the direction the character is facing (left or right)
      * @param characterConfig the character configuration
      * @returns {number} the sprite animation id
      */
-    function animateCharacterSprite(characterConfig) {
+    function animateCharacterSprite(toX, toY, act, dir, characterConfig) {
         let index = 0;
         let timeout = characterConfig[FPS] === 0 ? 0 : 1000 / characterConfig[FPS];
+        let initialBackgroundPps = backgroundInfo['backgroundInfo'][PPS] === undefined ? 0 : backgroundInfo['backgroundInfo'][PPS];
         let animationId = setInterval(() => {
 
             if (index > characterConfig['offsets'].length - 1) {
@@ -115,6 +121,22 @@ const Character = (props) => {
                 }
             }
             recordPosition();
+
+            if (!props.bindClicks) {
+                let pps = backgroundInfo['backgroundInfo'][PPS] === undefined ? 0 : backgroundInfo['backgroundInfo'][PPS];
+                if (pps != initialBackgroundPps) {
+                    // If background is moving in the same direction of the character add to the pps, otherwise subtract
+                    let adjusted = pps * (dir !== backgroundInfo['backgroundInfo']['direction'] ? -1 : 1);
+
+                    // Stop movement and sprite animation and restart it with the adjusted pps
+                    clearInterval(animationId);
+                    Animated.timing(x, {useNativeDriver: false}).stop();
+                    Animated.timing(y, {useNativeDriver: false}).stop();
+
+                    animateCharacter(toX, toY, act, dir, adjusted);
+                }
+            }
+
             setFrameIndex(index);
             index++;
         }, timeout);
@@ -134,6 +156,7 @@ const Character = (props) => {
     function animateCharacterMovement(toX, toY, animationId, pps) {
 
         if (pps > 0 && !props.bindClicks) {
+
             let duration = pps === 0
                 ? 0
                 : getDistanceToCoordinate(toX, toY) / pps * 1000;
@@ -228,7 +251,7 @@ const Character = (props) => {
         if (props.bindClicks) {
 
             if (backgroundInfo['backgroundInfo'] === undefined) {
-                backgroundInfo['backgroundInfo'] = {'fps' : 0, 'direction': dir === LEFT ? RIGHT : LEFT};
+                backgroundInfo['backgroundInfo'] = {'pps' : 0, 'direction': dir === LEFT ? RIGHT : LEFT};
             }
             backgroundInfo['backgroundInfo']['direction'] = dir === LEFT ? RIGHT : LEFT;
             backgroundInfo.setBackgroundDetail(backgroundInfo.backgroundInfo);
