@@ -1,11 +1,12 @@
 import {React, useContext, useEffect, useState} from 'react';
 import {Animated, Dimensions, Easing, Image, Pressable, Text, View} from 'react-native';
-import {GameContext} from "../game/game-context";
+import {PositionContext} from "../game/position-context";
 import {ATTACK, BACKGROUND_SIZE_PX, DOUBLE_CLICK, DOUBLE_CLICK_THRESHOLD_MS, FPS, LEFT, LONG_PRESS, PPS, PRESS_OUT,
     RIGHT, SHORT_PRESS, STOP, WALK, SCROLLING_ACTIONS} from "../util/constants";
 import {ACTION_TRANSITIONS} from "./character-config";
 import backgroundImage from "../assets/backgrounds/scrolling-desert.png";
 import * as ScreenOrientation from 'expo-screen-orientation';
+import {BackgroundContext} from "../game/background-context";
 
 const LANDSCAPE_ORIENTATIONS =
     [ScreenOrientation.Orientation.LANDSCAPE_LEFT, ScreenOrientation.Orientation.LANDSCAPE_RIGHT];
@@ -21,6 +22,9 @@ const Character = (props) => {
     const [backgroundOffset, setBackgroundOffset] = useState(new Animated.Value(-1*BACKGROUND_SIZE_PX));
     const [clickEvent, setClickEvent] = useState(false);
     const [screenHeight, setScreenHeight] = useState(Dimensions.get('window').height);
+
+    const positions = useContext(PositionContext);
+    const backgroundInfo = useContext(BackgroundContext);
 
     const HEIGHT_OFFSET = props.characterConfig[direction][action]['heightOffset'];
 
@@ -99,6 +103,7 @@ const Character = (props) => {
                     index = 0;
                 }
             }
+            recordPosition();
             setFrameIndex(index);
             index++;
         }, timeout);
@@ -188,15 +193,48 @@ const Character = (props) => {
      * @param e the press event
      */
     function handleDirectionChange(e) {
-        setDirection(isChangingDirectionTo(e, LEFT)
+        let dir = isChangingDirectionTo(e, LEFT)
             ? LEFT
-            : isChangingDirectionTo(e, RIGHT) ? RIGHT : direction);
+            : isChangingDirectionTo(e, RIGHT) ? RIGHT : direction;
+
+        setDirection(dir);
 
         setBackgroundOffset(new Animated.Value(isChangingDirectionTo(e, LEFT)
             ? backgroundOffset._value - BACKGROUND_SIZE_PX
             : isChangingDirectionTo(e, RIGHT)
                 ? backgroundOffset._value + BACKGROUND_SIZE_PX
                 : backgroundOffset._value));
+
+        setBackgroundDirection(dir);
+    }
+
+    /**
+     * Set the direction the background is moving. Saves to the parent component state.
+     *
+     * @param dir the direction the main character is moving
+     */
+    function setBackgroundDirection(dir) {
+        if (props.bindClicks) {
+            if (backgroundInfo['backgroundInfo'] === undefined) {
+                backgroundInfo['backgroundInfo'] = {'direction': dir === LEFT ? RIGHT : LEFT};
+            }
+            backgroundInfo['backgroundInfo']['direction'] = dir === LEFT ? RIGHT : LEFT;
+            backgroundInfo.setBackgroundDetail(backgroundInfo.backgroundInfo);
+        }
+    }
+
+    /**
+     * Records the coordinates for the character to the parent shared state.
+     */
+    function recordPosition() {
+        if (positions['positions'][props.id] === undefined) {
+            positions['positions'][props.id] = {x : x._value, y : y._value};
+        }
+
+        positions['positions'][props.id]['x'] = x._value;
+        positions['positions'][props.id]['y'] = y._value;
+
+        positions.setCharacterPositions(positions.positions);
     }
 
     /**
@@ -273,19 +311,8 @@ const Character = (props) => {
                                                    : props.defaultPosition;
     }
 
-    const state = useContext(GameContext);
-
-    // Set the shared state for the character as it moves around. Wrap in useEffect to run only wen the data changes and
-    // not on every component prop update
     useEffect(() => {
-        if (state['gameState']['positions'][props.id] === undefined) {
-            state['gameState']['positions'][props.id] = {x : 0, y : 0, direction : ''};
-        }
-
-        state['gameState']['positions'][props.id]['x'] = x;
-        state['gameState']['positions'][props.id]['y'] = y;
-
-        state.setGameState(state.gameState);
+        //registerPositions();
 
         if (props.id !== 'barbarian') {
             animateCharacter(0, getBottomY() + props.spriteHeight - props.spriteHeight, WALK, 'left');
@@ -343,7 +370,8 @@ const Character = (props) => {
             }}>
 
                 <Text>
-                    state:{JSON.stringify(state)}
+                    backgroundInfo: {JSON.stringify(backgroundInfo)}
+                    positions:{JSON.stringify(positions)}
                 </Text>
                 <Image source={props.sheetImage}
                        style={{
