@@ -51,7 +51,7 @@ const Character = (props) => {
      */
     function handleLongPress(e, animationId) {
         clearInterval(animationId);
-        animateCharacter(e.nativeEvent.pageX, e.nativeEvent.pageY, WALK, direction);
+        animateCharacter(e.nativeEvent.pageX, e.nativeEvent.pageY - props.spriteHeight / 2, WALK, direction);
     }
 
     /**
@@ -72,11 +72,13 @@ const Character = (props) => {
      * @param dir the direction the character is facing (left or right)
      */
     function animateCharacter(toX, toY, act, dir, fpsAdjust = 0){
+
+        stopCharacterMovement()
         setAction(act);
         setFrameIndex(0);
 
         let characterConfig = props.characterConfig[dir][act];
-        setBackgroundPps(act, characterConfig);
+        setBackgroundPps(dir, characterConfig[PPS]);
         setCharacterConfig(characterConfig);
 
         animateBackground(act, dir);
@@ -84,12 +86,19 @@ const Character = (props) => {
         animateCharacterMovement(toX, toY, spriteAnimationId, characterConfig[PPS] + fpsAdjust);
     }
 
-    function setBackgroundPps(act, characterConfig) {
+    /**
+     * Sets the pixels per second of the background dictated by the pixels per second of the main characters current
+     * action. Performs a noop of the character is not the main character (the character with clicks bound).
+     *
+     * @param dir the direction of the character used to set the default direction
+     * @param pps the pixels per second of the character
+     */
+    function setBackgroundPps(dir, pps) {
         if (props.bindClicks) {
             if (backgroundInfo['backgroundInfo'] === undefined) {
                 backgroundInfo['backgroundInfo'] = {'pps' : 0, 'direction': dir === LEFT ? RIGHT : LEFT};
             }
-            backgroundInfo['backgroundInfo']['pps'] = characterConfig[PPS];
+            backgroundInfo['backgroundInfo']['pps'] = pps;
             backgroundInfo.setBackgroundDetail(backgroundInfo.backgroundInfo);
         }
     }
@@ -123,16 +132,14 @@ const Character = (props) => {
             recordPosition();
 
             if (!props.bindClicks) {
-                let pps = backgroundInfo['backgroundInfo'][PPS] === undefined ? 0 : backgroundInfo['backgroundInfo'][PPS];
-                if (pps != initialBackgroundPps) {
+                let backgroundPps = backgroundInfo['backgroundInfo'][PPS] === undefined ? 0 : backgroundInfo['backgroundInfo'][PPS];
+                if (backgroundPps != initialBackgroundPps) {
                     // If background is moving in the same direction of the character add to the pps, otherwise subtract
-                    let adjusted = pps * (dir !== backgroundInfo['backgroundInfo']['direction'] ? -1 : 1);
+                    let adjusted = backgroundPps * (dir !== backgroundInfo['backgroundInfo']['direction'] ? -1 : 1);
 
                     // Stop movement and sprite animation and restart it with the adjusted pps
                     clearInterval(animationId);
-                    Animated.timing(x, {useNativeDriver: false}).stop();
-                    Animated.timing(y, {useNativeDriver: false}).stop();
-
+                    stopCharacterMovement();
                     animateCharacter(toX, toY, act, dir, adjusted);
                 }
             }
@@ -155,7 +162,12 @@ const Character = (props) => {
      */
     function animateCharacterMovement(toX, toY, animationId, pps) {
 
-        if (pps > 0 && !props.bindClicks) {
+        if (pps > 0/* && !props.bindClicks*/) {
+
+            if (props.bindClicks) {
+                toX = x._value;
+                toY = Math.min(toY, getBottomY());
+            }
 
             let duration = pps === 0
                 ? 0
@@ -181,7 +193,9 @@ const Character = (props) => {
 
                 ]
             ).start(({ finished }) => {
-                clearInterval(animationId);
+                if (!props.bindClicks) {
+                    clearInterval(animationId);
+                }
             });
         }
     }
@@ -256,6 +270,19 @@ const Character = (props) => {
             backgroundInfo['backgroundInfo']['direction'] = dir === LEFT ? RIGHT : LEFT;
             backgroundInfo.setBackgroundDetail(backgroundInfo.backgroundInfo);
         }
+    }
+
+    /**
+     * Stops the character movement
+     */
+    function stopCharacterMovement() {
+        if (x !== undefined) {
+            Animated.timing(x, {useNativeDriver: false}).stop();
+        }
+        if (y != undefined) {
+            Animated.timing(y, {useNativeDriver: false}).stop();
+        }
+
     }
 
     /**
