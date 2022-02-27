@@ -7,9 +7,14 @@ import {ACTION_TRANSITIONS} from "./character-config";
 import backgroundImage from "../assets/backgrounds/scrolling-desert.png";
 import * as ScreenOrientation from 'expo-screen-orientation';
 import {BackgroundContext} from "../game/background-context";
+import {Gesture, GestureDetector} from "react-native-gesture-handler";
 
 const LANDSCAPE_ORIENTATIONS =
     [ScreenOrientation.Orientation.LANDSCAPE_LEFT, ScreenOrientation.Orientation.LANDSCAPE_RIGHT];
+
+let pressY = 0;
+let targetY = 0;
+let syncingY = false;
 
 const Character = (props) => {
     const [frameIndex, setFrameIndex] = useState(0);
@@ -50,6 +55,7 @@ const Character = (props) => {
      * @param spriteAnimationId the current sprite animation id of the character.
      */
     function handleLongPress(e, animationId) {
+        pressY = e.nativeEvent.pageY;
         clearInterval(animationId);
         animateCharacter(e.nativeEvent.pageX, e.nativeEvent.pageY - props.spriteHeight / 2, WALK, direction);
     }
@@ -60,6 +66,7 @@ const Character = (props) => {
      * @param spriteAnimationId the current sprite animation id of the character.
      */
     function handlePressIn(e) {
+        clearInterval(spriteAnimationId);
         handleDirectionChange(e);
     }
 
@@ -83,7 +90,10 @@ const Character = (props) => {
 
         animateBackground(act, dir);
         let spriteAnimationId = animateCharacterSprite(toX, toY, act, dir, characterConfig);
-        animateCharacterMovement(toX, toY, spriteAnimationId, characterConfig[PPS] + fpsAdjust);
+
+        if (!props.bindClicks) {
+            animateCharacterMovement(toX, toY, spriteAnimationId, characterConfig[PPS] + fpsAdjust);
+        }
     }
 
     /**
@@ -130,6 +140,31 @@ const Character = (props) => {
                 }
             }
             recordPosition();
+
+
+            if (props.bindClicks && SCROLLING_ACTIONS.includes(act)) {
+                if (pressY !== targetY) {
+                    targetY = pressY - props.spriteHeight / 2;
+                }
+
+                if (!syncingY && y._value !== targetY) {
+                    syncingY = true;
+
+                    Animated.timing(y, {
+                        toValue : targetY,
+                        duration : Math.abs(y._value - targetY) / characterConfig[PPS] * 1000,
+                        easing: Easing.linear,
+                        useNativeDriver: false
+                    }).start((successful) => {
+                        console.log('y is now %s target is %s', y._value, targetY);
+                        syncingY = false;
+                    });
+
+                }
+
+
+            }
+
 
             if (!props.bindClicks) {
                 let backgroundPps = backgroundInfo['backgroundInfo'][PPS] === undefined ? 0 : backgroundInfo['backgroundInfo'][PPS];
@@ -395,10 +430,34 @@ const Character = (props) => {
 
     },[]);
 
+    const panGesture = Gesture.Pan()
+        .onFinalize((e) => {
+            //console.log('stop animation of ');
+            //terminateY = true;
+            Animated.timing(y).stop();
+            syncingY = false;
+            targetY = y._value;
+            pressY = targetY;
+
+            clearInterval(spriteAnimationId);
+            console.log('==> stopping sprite animation id %s', spriteAnimationId);
+            animateCharacter(e.absoluteX, e.absoluteY, STOP, direction);
+        })
+        .onTouchesMove((e) => {
+            let touches = e.changedTouches[e.numberOfTouches - 1];
+            pressY = touches.absoluteY;
+            //console.log('touched %s,%s', touches.absoluteX, touches.absoluteY);
+        });
+
+
     return (
+        <GestureDetector gesture={panGesture}>
         <Pressable
             onLongPress={(e) => handleLongPress(e, spriteAnimationId)}
+            /*
             onPressOut={(e) => handlePressOut(e, spriteAnimationId)}
+
+             */
             onPressIn={(e) => handlePressIn(e, spriteAnimationId)}
             pointerEvents={props.bindClicks ? 'auto' : 'none'}
             style={{zIndex: props.bindClicks ? 0 : 1}}>
@@ -444,7 +503,8 @@ const Character = (props) => {
                            height: props.sheetHeight
                        }}/>
             </Animated.View>
-        </Pressable>);
+        </Pressable>
+        </GestureDetector>);
 }
 
 export default Character;
