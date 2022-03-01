@@ -24,7 +24,7 @@ const Character = (props) => {
     const [characterConfig, setCharacterConfig] = useState(props.characterConfig[direction][action]);
     const [x, setX] = useState(new Animated.Value(getDefaultX()));
     const [y, setY] = useState(new Animated.Value(getBottomY()));
-    const [backgroundOffset, setBackgroundOffset] = useState(new Animated.Value(-1*BACKGROUND_SIZE_PX));
+    const [backgroundOffset] = useState(new Animated.Value(-1334));
     const [clickEvent, setClickEvent] = useState(false);
     const [screenHeight, setScreenHeight] = useState(Dimensions.get('window').height);
 
@@ -156,7 +156,6 @@ const Character = (props) => {
                         easing: Easing.linear,
                         useNativeDriver: false
                     }).start((successful) => {
-                        console.log('y is now %s target is %s', y._value, targetY);
                         syncingY = false;
                     });
 
@@ -252,7 +251,8 @@ const Character = (props) => {
 
         if (props.bindClicks) {
 
-            Animated.loop(
+            console.log('animating from %s to %s for a duration of %s', backgroundOffset._value, backgroundOffset._value + (direction === RIGHT ? -1 : 1) * BACKGROUND_SIZE_PX, BACKGROUND_SIZE_PX / characterConfig[PPS] * 1000);
+            //Animated.loop(
             Animated.timing(
                 backgroundOffset,
                 {
@@ -261,9 +261,17 @@ const Character = (props) => {
                     easing: Easing.linear,
                     useNativeDriver: false
                 }
-            )).start(({ finished }) => {
-                setBackgroundOffset(new Animated.Value(getOffsetForDirection(direction)));
+            )/*)*/.start(({ finished }) => {
+                console.log('done animating at %s, setting offset to %s', backgroundOffset._value, getOffsetForDirection(direction));
+                backgroundOffset.setValue(getOffsetForDirection(direction));
                 clearInterval(spriteAnimationId);
+                //animateBackground(action, direction);
+
+                console.log('background animation done was it finished? %s', finished);
+
+                if (finished) {
+                    animateBackground(action, direction);
+                }
             });
         }
 
@@ -282,11 +290,11 @@ const Character = (props) => {
 
         setDirection(dir);
 
-        setBackgroundOffset(new Animated.Value(isChangingDirectionTo(e, LEFT)
+        backgroundOffset.setValue(isChangingDirectionTo(e, LEFT)
             ? backgroundOffset._value - BACKGROUND_SIZE_PX
             : isChangingDirectionTo(e, RIGHT)
                 ? backgroundOffset._value + BACKGROUND_SIZE_PX
-                : backgroundOffset._value));
+                : backgroundOffset._value);
 
         setBackgroundDirection(dir);
     }
@@ -373,7 +381,8 @@ const Character = (props) => {
      * Stops the background animation.
      */
     function stopBackgroundAnimation() {
-        Animated.timing(backgroundOffset, {useNativeDriver: false}).stop();
+        //Animated.timing(backgroundOffset, {useNativeDriver: false}).stop();
+        backgroundOffset.setValue(backgroundOffset._value);
     }
 
     /**
@@ -446,6 +455,19 @@ const Character = (props) => {
         .onTouchesMove((e) => {
             let touches = e.changedTouches[e.numberOfTouches - 1];
             pressY = touches.absoluteY;
+            let pressX = touches.absoluteX;
+
+            //console.log('x: %s pressX: %s', x._value, touches.absoluteX - props.spriteWidth / 2);
+
+            if (pressX - props.spriteWidth / 2 < x._value && direction == RIGHT) {
+                clearInterval(spriteAnimationId);
+                setDirection(LEFT);
+                animateCharacter(pressX, pressY, WALK, LEFT);
+            } else if (pressX - props.spriteWidth / 2 >= x._value && direction === LEFT) {
+                clearInterval(spriteAnimationId);
+                setDirection(RIGHT);
+                animateCharacter(pressX, pressY, WALK, RIGHT);
+            }
             //console.log('touched %s,%s', touches.absoluteX, touches.absoluteY);
         });
 
@@ -491,8 +513,7 @@ const Character = (props) => {
             }}>
 
                 <Text>
-                    backgroundInfo: {JSON.stringify(backgroundInfo)}
-                    positions:{JSON.stringify(positions)}
+                    backgroundOffset: {backgroundOffset._value}
                 </Text>
                 <Image source={props.sheetImage}
                        style={{
