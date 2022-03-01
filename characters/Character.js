@@ -67,7 +67,7 @@ const Character = (props) => {
      */
     function handlePressIn(e) {
         clearInterval(spriteAnimationId);
-        handleDirectionChange(e);
+        handleDirectionChange(e.nativeEvent.pageX, e.nativeEvent.pageY);
     }
 
     /**
@@ -249,28 +249,49 @@ const Character = (props) => {
 
         let characterConfig = props.characterConfig[direction][action];
 
+        let toValue = 0;
+        let distance = 0;
+        if (direction === RIGHT) {
+            //console.log('moving right from value %s to value is %s', backgroundOffset._value, -2668);
+            toValue = backgroundOffset._value - BACKGROUND_SIZE_PX;
+            toValue = -2668;
+            distance = Math.abs(backgroundOffset._value - toValue);
+        } else {
+            //console.log('moving left from value %s and to value is %s', backgroundOffset._value, 0);
+            toValue = backgroundOffset._value + BACKGROUND_SIZE_PX;
+            toValue = 0;
+            distance = Math.abs(backgroundOffset._value - toValue);
+        }
+
         if (props.bindClicks) {
 
-            console.log('animating from %s to %s for a duration of %s', backgroundOffset._value, backgroundOffset._value + (direction === RIGHT ? -1 : 1) * BACKGROUND_SIZE_PX, BACKGROUND_SIZE_PX / characterConfig[PPS] * 1000);
+            //console.log('animating from %s to %s for a duration of %s', backgroundOffset._value, backgroundOffset._value + (direction === RIGHT ? -1 : 1) * BACKGROUND_SIZE_PX, BACKGROUND_SIZE_PX / characterConfig[PPS] * 1000);
             //Animated.loop(
             Animated.timing(
                 backgroundOffset,
                 {
-                    toValue: backgroundOffset._value + (direction === RIGHT ? -1 : 1) * BACKGROUND_SIZE_PX,
-                    duration: BACKGROUND_SIZE_PX / characterConfig[PPS] * 1000,
+                    toValue: toValue,
+                    duration: distance / characterConfig[PPS] * 1000,
                     easing: Easing.linear,
                     useNativeDriver: false
                 }
             )/*)*/.start(({ finished }) => {
                 console.log('done animating at %s, setting offset to %s', backgroundOffset._value, getOffsetForDirection(direction));
-                backgroundOffset.setValue(getOffsetForDirection(direction));
+                //backgroundOffset.setValue(getOffsetForDirection(direction));
                 clearInterval(spriteAnimationId);
                 //animateBackground(action, direction);
 
                 console.log('background animation done was it finished? %s', finished);
 
                 if (finished) {
-                    animateBackground(action, direction);
+                    if (direction === RIGHT) {
+                        backgroundOffset.setValue(-1*BACKGROUND_SIZE_PX);
+                        animateBackground(action, direction);
+                    } else {
+                        //backgroundOffset.setValue()
+                        backgroundOffset.setValue(-1*BACKGROUND_SIZE_PX);
+                        animateBackground(action, direction);
+                    }
                 }
             });
         }
@@ -283,18 +304,22 @@ const Character = (props) => {
      * is not shown.
      * @param e the press event
      */
-    function handleDirectionChange(e) {
-        let dir = isChangingDirectionTo(e, LEFT)
+    function handleDirectionChange(pageX, pageY) {
+        let dir = isChangingDirectionTo(pageX, pageY, LEFT)
             ? LEFT
-            : isChangingDirectionTo(e, RIGHT) ? RIGHT : direction;
+            : isChangingDirectionTo(pageX, pageY, RIGHT) ? RIGHT : direction;
 
         setDirection(dir);
 
-        backgroundOffset.setValue(isChangingDirectionTo(e, LEFT)
+        /*
+        backgroundOffset.setValue(isChangingDirectionTo(pageX, pageY, LEFT)
             ? backgroundOffset._value - BACKGROUND_SIZE_PX
-            : isChangingDirectionTo(e, RIGHT)
+            : isChangingDirectionTo(pageX, pageY, RIGHT)
                 ? backgroundOffset._value + BACKGROUND_SIZE_PX
                 : backgroundOffset._value);
+
+         */
+
 
         setBackgroundDirection(dir);
     }
@@ -370,11 +395,11 @@ const Character = (props) => {
      * @param testDir the direction to test
      * @returns {boolean} true if the character is changing direction to testDir, false otherwise.
      */
-    function isChangingDirectionTo(e, testDir) {
+    function isChangingDirectionTo(pageX, pageY, testDir) {
         let xValue = x._value !== undefined ? x._value : getDefaultX();
         return testDir === LEFT
-            ? direction === RIGHT && e.nativeEvent.pageX < xValue + props.spriteWidth / 2
-            : direction === LEFT && e.nativeEvent.pageX >= xValue + props.spriteWidth / 2;
+            ? direction === RIGHT && pageX < xValue + props.spriteWidth / 2
+            : direction === LEFT && pageX >= xValue + props.spriteWidth / 2;
     }
 
     /**
@@ -461,11 +486,13 @@ const Character = (props) => {
 
             if (pressX - props.spriteWidth / 2 < x._value && direction == RIGHT) {
                 clearInterval(spriteAnimationId);
-                setDirection(LEFT);
+                //setDirection(LEFT);
+                handleDirectionChange(pressX, pressY);
                 animateCharacter(pressX, pressY, WALK, LEFT);
             } else if (pressX - props.spriteWidth / 2 >= x._value && direction === LEFT) {
                 clearInterval(spriteAnimationId);
-                setDirection(RIGHT);
+                //setDirection(RIGHT);
+                handleDirectionChange(pressX, pressY);
                 animateCharacter(pressX, pressY, WALK, RIGHT);
             }
             //console.log('touched %s,%s', touches.absoluteX, touches.absoluteY);
