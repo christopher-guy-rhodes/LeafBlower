@@ -12,10 +12,6 @@ import {Gesture, GestureDetector} from "react-native-gesture-handler";
 const LANDSCAPE_ORIENTATIONS =
     [ScreenOrientation.Orientation.LANDSCAPE_LEFT, ScreenOrientation.Orientation.LANDSCAPE_RIGHT];
 
-let pressY = 0;
-let targetY = 0;
-let syncingY = false;
-
 const Character = (props) => {
     const [frameIndex, setFrameIndex] = useState(0);
     const [spriteAnimationId, setSpriteAnimationId] = useState(0);
@@ -27,6 +23,9 @@ const Character = (props) => {
     const [backgroundOffset] = useState(new Animated.Value(-1334));
     const [clickEvent, setClickEvent] = useState(false);
     const [screenHeight, setScreenHeight] = useState(Dimensions.get('window').height);
+    const [pressY, setPressY] = useState(0);
+    const [syncingY, setSyncingY] = useState(false);
+    const [targetY, setTargetY] = useState(0);
 
     const positions = useContext(PositionContext);
     const backgroundInfo = useContext(BackgroundContext);
@@ -55,7 +54,7 @@ const Character = (props) => {
      * @param spriteAnimationId the current sprite animation id of the character.
      */
     function handleLongPress(e, animationId) {
-        pressY = e.nativeEvent.pageY;
+        setPressY(e.nativeEvent.pageY);
         clearInterval(animationId);
         animateCharacter(e.nativeEvent.pageX, e.nativeEvent.pageY - props.spriteHeight / 2, WALK, direction);
     }
@@ -91,9 +90,9 @@ const Character = (props) => {
         animateBackground(act, dir);
         let spriteAnimationId = animateCharacterSprite(toX, toY, act, dir, characterConfig);
 
-        if (!props.bindClicks) {
+        //if (!props.bindClicks) {
             animateCharacterMovement(toX, toY, spriteAnimationId, characterConfig[PPS] + fpsAdjust);
-        }
+        //}
     }
 
     /**
@@ -141,30 +140,6 @@ const Character = (props) => {
             }
             recordPosition();
 
-
-            if (props.bindClicks && SCROLLING_ACTIONS.includes(act)) {
-                if (pressY !== targetY) {
-                    targetY = pressY - props.spriteHeight / 2;
-                }
-
-                if (!syncingY && y._value !== targetY) {
-                    syncingY = true;
-
-                    Animated.timing(y, {
-                        toValue : targetY,
-                        duration : Math.abs(y._value - targetY) / characterConfig[PPS] * 1000,
-                        easing: Easing.linear,
-                        useNativeDriver: false
-                    }).start((successful) => {
-                        syncingY = false;
-                    });
-
-                }
-
-
-            }
-
-
             if (!props.bindClicks) {
                 let backgroundPps = backgroundInfo['backgroundInfo'][PPS] === undefined ? 0 : backgroundInfo['backgroundInfo'][PPS];
                 if (backgroundPps != initialBackgroundPps) {
@@ -201,6 +176,8 @@ const Character = (props) => {
             if (props.bindClicks) {
                 toX = x._value;
                 toY = Math.min(toY, getBottomY());
+                setTargetY(toY);
+                console.log('animating %s toY: %s', props.id, toY);
             }
 
             let duration = pps === 0
@@ -265,8 +242,6 @@ const Character = (props) => {
 
         if (props.bindClicks) {
 
-            //console.log('animating from %s to %s for a duration of %s', backgroundOffset._value, backgroundOffset._value + (direction === RIGHT ? -1 : 1) * BACKGROUND_SIZE_PX, BACKGROUND_SIZE_PX / characterConfig[PPS] * 1000);
-            //Animated.loop(
             Animated.timing(
                 backgroundOffset,
                 {
@@ -275,11 +250,9 @@ const Character = (props) => {
                     easing: Easing.linear,
                     useNativeDriver: false
                 }
-            )/*)*/.start(({ finished }) => {
+            ).start(({ finished }) => {
                 console.log('done animating at %s, setting offset to %s', backgroundOffset._value, getOffsetForDirection(direction));
-                //backgroundOffset.setValue(getOffsetForDirection(direction));
                 clearInterval(spriteAnimationId);
-                //animateBackground(action, direction);
 
                 console.log('background animation done was it finished? %s', finished);
 
@@ -310,16 +283,6 @@ const Character = (props) => {
             : isChangingDirectionTo(pageX, pageY, RIGHT) ? RIGHT : direction;
 
         setDirection(dir);
-
-        /*
-        backgroundOffset.setValue(isChangingDirectionTo(pageX, pageY, LEFT)
-            ? backgroundOffset._value - BACKGROUND_SIZE_PX
-            : isChangingDirectionTo(pageX, pageY, RIGHT)
-                ? backgroundOffset._value + BACKGROUND_SIZE_PX
-                : backgroundOffset._value);
-
-         */
-
 
         setBackgroundDirection(dir);
     }
@@ -464,38 +427,59 @@ const Character = (props) => {
 
     },[]);
 
+    function changedVerticalDirection() {
+        return pressY - props.spriteHeight / 2 < y._value && pressY - props.spriteHeight / 2 >= targetY ||
+          pressY - props.spriteHeight / 2 >= y._value && pressY - props.spriteHeight / 2 <= targetY;
+    }
+
+    function changedHorizontalDirection(pressX) {
+        return pressX - props.spriteWidth / 2 < x._value && direction == RIGHT ||
+            pressX - props.spriteWidth / 2 >= x._value && direction === LEFT;
+    }
+
     const panGesture = Gesture.Pan()
         .onFinalize((e) => {
-            //console.log('stop animation of ');
-            //terminateY = true;
             Animated.timing(y).stop();
-            syncingY = false;
-            targetY = y._value;
-            pressY = targetY;
-
+            setSyncingY(false);
+            setTargetY(y._value);
+            setPressY(targetY);
             clearInterval(spriteAnimationId);
-            console.log('==> stopping sprite animation id %s', spriteAnimationId);
             animateCharacter(e.absoluteX, e.absoluteY, STOP, direction);
         })
         .onTouchesMove((e) => {
             let touches = e.changedTouches[e.numberOfTouches - 1];
-            pressY = touches.absoluteY;
+            setPressY(touches.absoluteY);
             let pressX = touches.absoluteX;
 
-            //console.log('x: %s pressX: %s', x._value, touches.absoluteX - props.spriteWidth / 2);
 
-            if (pressX - props.spriteWidth / 2 < x._value && direction == RIGHT) {
+            if (changedHorizontalDirection(pressX)) {
                 clearInterval(spriteAnimationId);
-                //setDirection(LEFT);
                 handleDirectionChange(pressX, pressY);
-                animateCharacter(pressX, pressY, WALK, LEFT);
-            } else if (pressX - props.spriteWidth / 2 >= x._value && direction === LEFT) {
-                clearInterval(spriteAnimationId);
-                //setDirection(RIGHT);
-                handleDirectionChange(pressX, pressY);
-                animateCharacter(pressX, pressY, WALK, RIGHT);
+                animateCharacter(pressX, pressY, WALK, direction === RIGHT ? LEFT : RIGHT);
             }
-            //console.log('touched %s,%s', touches.absoluteX, touches.absoluteY);
+
+            if (changedVerticalDirection()) {
+                setSyncingY(false);
+            }
+
+            if (props.bindClicks && SCROLLING_ACTIONS.includes(WALK)) {
+                if (pressY !== targetY) {
+                    setTargetY(pressY - props.spriteHeight / 2);
+                }
+
+                if (!syncingY && y._value !== targetY) {
+                    setSyncingY(true);
+
+                    Animated.timing(y, {
+                        toValue : targetY,
+                        duration : Math.abs(y._value - targetY) / characterConfig[PPS] * 1000,
+                        easing: Easing.linear,
+                        useNativeDriver: false
+                    }).start((successful) => {
+                        setSyncingY(false);
+                    });
+                }
+            }
         });
 
 
@@ -540,7 +524,10 @@ const Character = (props) => {
             }}>
 
                 <Text>
-                    backgroundOffset: {backgroundOffset._value}
+                    {/*
+                    backgroundOffset: {backgroundOffset._value}{"\n"}
+                    pressY2: {pressY}
+                    */}
                 </Text>
                 <Image source={props.sheetImage}
                        style={{
