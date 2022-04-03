@@ -1,5 +1,6 @@
 {
   "expo": {
+    "orientation": "landscape",
     "name": "LeafBlower",
     "slug": "LeafBlower",
     "version": "1.0.0",

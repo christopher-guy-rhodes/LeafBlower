@@ -406,21 +406,29 @@ const Character = (props) => {
     }
 
     useEffect(() => {
-        //registerPositions();
+        recordPosition();
 
-        if (props.id !== 'barbarian') {
+        if (!props.bindClicks) {
             animateCharacter(0, getBottomY() + props.spriteHeight - props.spriteHeight, WALK, 'left');
+        }
+
+        if (props.defaultPosition && props.bindClicks) {
+            throw new Error("Cannot set default position for the main characterrr");
         }
 
         ScreenOrientation.addOrientationChangeListener((event) => {
             setScreenHeight(Dimensions.get('window').height);
+
+            let barbarianXDelta = positions['positions']['barbarian']['x'] + Dimensions.get('window').height - props.spriteWidth;
             if (props.bindClicks) {
-                setX(getDefaultX());
+                setX(new Animated.Value(getDefaultX()));
+            } else {
+                x.setOffset(barbarianXDelta);
             }
-            setY(getBottomY());
+            setY(new Animated.Value(getBottomY()));
 
             if (props.id !== 'barbarian') {
-                animateCharacter(0, getBottomY() + props.spriteHeight - props.spriteHeight, WALK, 'left');
+                animateCharacter(-1*barbarianXDelta, getBottomY() + props.spriteHeight - props.spriteHeight, WALK, 'left');
             }
 
         });
