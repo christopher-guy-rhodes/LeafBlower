@@ -361,6 +361,7 @@ export class CharacterAnimation {
             this.setFrameIndex(index);
             index++;
         }, timeout);
+        console.log('==> setting sprite animation id to %s', animationId);
         this.setSpriteAnimationId(animationId);
         return animationId;
     }
@@ -434,6 +435,7 @@ export class CharacterAnimation {
                 ]
             ).start(({ finished }) => {
                 if (!this.characterProps.bindClicks) {
+                    console.log('==> stop animation id %s', animationId);
                     clearInterval(animationId);
                 }
             });
@@ -461,8 +463,9 @@ export class CharacterAnimation {
         this.animateBackground(act, dir);
         let spriteAnimationId = this.animateCharacterSprite(toX, toY, act, dir, characterConfig);
 
+
         //if (!props.bindClicks) {
-        this.animateCharacterMovement(toX, toY, this.spriteAnimationId, characterConfig[PPS] + fpsAdjust);
+        this.animateCharacterMovement(toX, toY, spriteAnimationId, characterConfig[PPS] + fpsAdjust);
         //}
     }
 

@@ -58,7 +58,6 @@ const Character = (props) => {
 
     const HEIGHT_OFFSET = props.characterConfig[direction][action]['heightOffset'];
 
-
     useEffect(() => {
         characterAnimation.recordPosition();
 
@@ -82,7 +81,7 @@ const Character = (props) => {
             setY(new Animated.Value(CharacterAnimation.getBottomY(props)));
 
             if (props.id !== 'barbarian') {
-                animateCharacter(-1*barbarianXDelta, CharacterAnimation.getBottomY(props) + props.spriteHeight - props.spriteHeight, WALK, 'left');
+                characterAnimation.animateCharacter(-1*barbarianXDelta, CharacterAnimation.getBottomY(props) + props.spriteHeight - props.spriteHeight, WALK, 'left');
             }
 
         });
@@ -97,7 +96,7 @@ const Character = (props) => {
         .onStart((e) => {
             setGestureY(e.absoluteY);
             clearInterval(spriteAnimationId);
-            animateCharacter(e.absoluteX,e.absoluteY - props.spriteHeight / 2, WALK, direction);
+            characterAnimation.animateCharacter(e.absoluteX,e.absoluteY - props.spriteHeight / 2, WALK, direction);
 
         })
         .onFinalize((e) => {
@@ -106,7 +105,7 @@ const Character = (props) => {
             setTargetY(y._value);
             setGestureY(targetY);
             clearInterval(spriteAnimationId);
-            animateCharacter(e.absoluteX, e.absoluteY, STOP, direction);
+            characterAnimation.animateCharacter(e.absoluteX, e.absoluteY, STOP, direction);
         })
         .onTouchesMove((e) => {
             let touches = e.changedTouches[e.numberOfTouches - 1];
