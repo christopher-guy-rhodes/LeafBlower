@@ -1,14 +1,12 @@
-import {React, useContext, useEffect, useState} from 'react';
-import {Animated, Dimensions, Easing, Image, Pressable, Text, View} from 'react-native';
-import {PositionContext} from "../game/position-context";
-import {ATTACK, BACKGROUND_WIDTH_PX, BACKGROUND_HEIGHT_PX, DOUBLE_CLICK, DOUBLE_CLICK_THRESHOLD_MS, FPS, LEFT,
-    LONG_PRESS, PPS, PRESS_OUT, RIGHT, SHORT_PRESS, STOP, WALK, SCROLLING_ACTIONS} from "../util/constants";
-import {ACTION_TRANSITIONS} from "./character-config";
+import { React, useContext, useEffect, useState } from 'react';
+import { Animated, Dimensions, Easing, Image, Pressable, Text, View } from 'react-native';
+import { PositionContext } from "../game/position-context";
+import { BACKGROUND_WIDTH_PX, BACKGROUND_HEIGHT_PX, RIGHT, STOP, WALK } from "../util/constants";
 import backgroundImage from "../assets/backgrounds/scrolling-desert.png";
 import * as ScreenOrientation from 'expo-screen-orientation';
-import {BackgroundContext} from "../game/background-context";
-import {Gesture, GestureDetector} from "react-native-gesture-handler";
-import {CharacterAnimation, CharacterAnimationBuilder} from "../animation/CharacterAnimation";
+import { BackgroundContext } from "../game/background-context";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { CharacterAnimation, CharacterAnimationBuilder } from "../animation/CharacterAnimation";
 
 const LANDSCAPE_ORIENTATIONS =
     [ScreenOrientation.Orientation.LANDSCAPE_LEFT, ScreenOrientation.Orientation.LANDSCAPE_RIGHT];
@@ -24,93 +22,66 @@ const Character = (props) => {
     const [backgroundOffset] = useState(new Animated.Value(-1334));
     const [clickEvent, setClickEvent] = useState(false);
     const [screenHeight, setScreenHeight] = useState(Dimensions.get('window').height);
-    const [pressY, setGestureY] = useState(0);
+    const [gestureY, setGestureY] = useState(0);
     const [syncingY, setSyncingY] = useState(false);
     const [targetY, setTargetY] = useState(0);
 
     const backgroundInfo = useContext(BackgroundContext);
     const positions = useContext(PositionContext);
 
-
-    const characterAnimation = new CharacterAnimationBuilder(characterConfig, props)
-        .withAction(action)
-        .withSetAction(setAction)
-        .withDirection(direction)
-        .withSetDirection(setDirection)
-        .withSetGestureY(setGestureY)
-        .withSyncingY(syncingY)
-        .withSetSyncingY(setSyncingY)
-        .withTargetY(targetY)
-        .withSetTargetY(setTargetY)
-        .withY(y)
-        .withX(x)
-        .withPressY(pressY)
-        .withPps(PPS)
+    const characterAnimation = new CharacterAnimationBuilder(props)
+        .withCoordinates(x, setX, y, setY)
+        .withActionState(action, setAction)
+        .withDirectionState(direction, setDirection)
+        .withGestureYState(gestureY, setGestureY)
+        .withSyncingYState(syncingY, setSyncingY)
+        .withTargetYState(targetY, setTargetY)
+        .withSpriteAnimationIdState(spriteAnimationId, setSpriteAnimationId)
+        .withFrameIndexState(frameIndex, setFrameIndex)
+        .withCharacterConfigState(characterConfig, setCharacterConfig)
+        .withScreenHeightState(screenHeight, setScreenHeight)
         .withBackgroundInfo(backgroundInfo)
-        .withSpriteAnimationId(spriteAnimationId)
-        .withSetSpriteAnimationId(setSpriteAnimationId)
         .withBackgroundOffset(backgroundOffset)
-        .withFrameIndex(frameIndex)
-        .withSetFrameIndex(setFrameIndex)
-        .withSetCharacterConfig(setCharacterConfig)
         .withPositions(positions).build();
-
 
     const HEIGHT_OFFSET = props.characterConfig[direction][action]['heightOffset'];
 
     useEffect(() => {
+        if (props.defaultPosition && props.bindClicks) {
+            throw new Error("Cannot set default position for the main character");
+        }
+
         characterAnimation.recordPosition();
 
+        // Have the non-main character walk across the screen for testing purposes at this point
         if (!props.bindClicks) {
-            characterAnimation.animateCharacter(0, CharacterAnimation.getBottomY(props) + props.spriteHeight - props.spriteHeight, WALK, 'left');
+            characterAnimation.animateCharacter(-1*props.spriteWidth,
+                CharacterAnimation.getBottomY(props) + props.spriteHeight - props.spriteHeight,
+                WALK,
+                'left');
         }
 
-        if (props.defaultPosition && props.bindClicks) {
-            throw new Error("Cannot set default position for the main characterrr");
-        }
+
 
         ScreenOrientation.addOrientationChangeListener((event) => {
-            setScreenHeight(Dimensions.get('window').height);
-
-            let barbarianXDelta = positions['positions']['barbarian']['x'] + Dimensions.get('window').height - props.spriteWidth;
-            if (props.bindClicks) {
-                setX(new Animated.Value(CharacterAnimation.getDefaultX(props)));
-            } else {
-                x.setOffset(barbarianXDelta);
-            }
-            setY(new Animated.Value(CharacterAnimation.getBottomY(props)));
-
-            if (props.id !== 'barbarian') {
-                characterAnimation.animateCharacter(-1*barbarianXDelta, CharacterAnimation.getBottomY(props) + props.spriteHeight - props.spriteHeight, WALK, 'left');
-            }
-
+            characterAnimation.handleScreenOrientationChange();
         });
 
     },[]);
 
     const panGesture = Gesture.Pan()
         .onBegin((e) => {
-            clearInterval(spriteAnimationId);
             characterAnimation.handleDirectionChange(e.absoluteX, e.absoluteY);
         })
         .onStart((e) => {
-            setGestureY(e.absoluteY);
-            clearInterval(spriteAnimationId);
-            characterAnimation.animateCharacter(e.absoluteX,e.absoluteY - props.spriteHeight / 2, WALK, direction);
-
+            characterAnimation.startSyncYToGesture(e.absoluteX, e.absoluteY);
         })
         .onFinalize((e) => {
-            Animated.timing(y).stop();
-            setSyncingY(false);
-            setTargetY(y._value);
-            setGestureY(targetY);
-            clearInterval(spriteAnimationId);
-            characterAnimation.animateCharacter(e.absoluteX, e.absoluteY, STOP, direction);
+            characterAnimation.stopSyncYToGesture(e.absoluteX, e.absoluteY);
         })
         .onTouchesMove((e) => {
             let touches = e.changedTouches[e.numberOfTouches - 1];
-            characterAnimation.syncYToGesture(touches.absoluteX, touches.absoluteY);
-
+            characterAnimation.handleSyncYToGestureChange(touches.absoluteX, touches.absoluteY);
         });
 
 

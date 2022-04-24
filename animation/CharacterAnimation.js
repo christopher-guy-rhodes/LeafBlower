@@ -1,4 +1,4 @@
-import {BACKGROUND_WIDTH_PX, FPS, LEFT, PPS, RIGHT, SCROLLING_ACTIONS, WALK} from "../util/constants";
+import {BACKGROUND_WIDTH_PX, FPS, LEFT, PPS, RIGHT, SCROLLING_ACTIONS, STOP, WALK} from "../util/constants";
 import {Animated, Dimensions, Easing} from "react-native";
 
 export class CharacterAnimation {
@@ -18,14 +18,17 @@ export class CharacterAnimation {
         this._setTargetY = builder.setTargetY;
         this._targetY = builder.targetY;
         this._y = builder.y;
+        this._setY = builder.setY;
         this._x = builder.x;
+        this._setX = builder.setX;
         this._pressY = builder.pressY;
-        this._pps = builder.pps;
         this._backgroundInfo = builder.backgroundInfo;
         this._backgroundOffset = builder.backgroundOffset;
         this._spriteAnimationId = builder.spriteAnimationId;
         this._setSpriteAnimationId = builder.setSpriteAnimationId;
         this._positions = builder.positions;
+        this._screenHeight = builder.screenHeight;
+        this._setScreenHeight = builder.setScreenHeight;
     }
 
     get characterProps() {
@@ -36,8 +39,16 @@ export class CharacterAnimation {
         return this._x;
     }
 
+    get setX() {
+        return this._setX;
+    }
+
     get y() {
         return this._y;
+    }
+
+    get setY() {
+        return this._setY;
     }
 
     get direction() {
@@ -116,6 +127,26 @@ export class CharacterAnimation {
         return this._pps;
     }
 
+    get setScreenHeight() {
+        return this._setScreenHeight;
+    }
+
+    handleScreenOrientationChange() {
+        this.setScreenHeight(Dimensions.get('window').height);
+
+        let barbarianXDelta = this.positions['positions']['barbarian']['x'] + Dimensions.get('window').height - this.characterProps.spriteWidth;
+        if (this.characterProps.bindClicks) {
+            this.setX(new Animated.Value(CharacterAnimation.getDefaultX(this.characterProps)));
+        } else {
+            this.x.setOffset(barbarianXDelta);
+        }
+        this.setY(new Animated.Value(CharacterAnimation.getBottomY(this.characterProps)));
+
+        if (!this.characterProps.bindClicks) {
+            this.animateCharacter(-1*barbarianXDelta, CharacterAnimation.getBottomY(this.characterProps) + this.characterProps.spriteHeight - this.characterProps.spriteHeight, WALK, 'left');
+        }
+    }
+
     changedHorizontalDirection(pressX) {
         return pressX - this.characterProps.spriteWidth / 2 < this.x._value && this.direction == RIGHT ||
             pressX - this.characterProps.spriteWidth / 2 >= this.x._value && this.direction === LEFT;
@@ -173,6 +204,7 @@ export class CharacterAnimation {
      * @param e the press event
      */
     handleDirectionChange(pageX, pageY) {
+        clearInterval(this.spriteAnimationId);
         let dir = this.isChangingDirectionTo(pageX, pageY, LEFT)
             ? LEFT
             : this.isChangingDirectionTo(pageX, pageY, RIGHT) ? RIGHT : this.direction;
@@ -216,8 +248,6 @@ export class CharacterAnimation {
      * Stops the background animation.
      */
     stopBackgroundAnimation() {
-        //Animated.timing(backgroundOffset, {useNativeDriver: false}).stop();
-        console.log('==> background offset %o', this.backgroundOffset);
         this.backgroundOffset.setValue(this.backgroundOffset._value);
     }
 
@@ -361,7 +391,6 @@ export class CharacterAnimation {
             this.setFrameIndex(index);
             index++;
         }, timeout);
-        console.log('==> setting sprite animation id to %s', animationId);
         this.setSpriteAnimationId(animationId);
         return animationId;
     }
@@ -469,7 +498,21 @@ export class CharacterAnimation {
         //}
     }
 
-    syncYToGesture(absoluteX, absoluteY) {
+    startSyncYToGesture(absoluteX, absoluteY) {
+        this.setGestureY(absoluteY);
+        clearInterval(this.spriteAnimationId);
+        this.animateCharacter(absoluteX,absoluteY - this.characterProps.spriteHeight / 2, WALK, this.direction);
+    }
+
+    stopSyncYToGesture(absoluteX, absoluteY) {
+        this.setSyncingY(false);
+        this.setTargetY(this.y._value);
+        this.setGestureY(this.y._value);
+        clearInterval(this.spriteAnimationId);
+        this.animateCharacter(absoluteX, absoluteY, STOP, this.direction);
+    }
+
+    handleSyncYToGestureChange(absoluteX, absoluteY) {
         if (!this.characterProps.bindClicks) {
             return;
         }
@@ -497,7 +540,7 @@ export class CharacterAnimation {
 
             Animated.timing(this.y, {
                 toValue : this.targetY,
-                duration : Math.abs(this.y._value - this.targetY) / this.characterConfig[this.pps] * 1000,
+                duration : Math.abs(this.y._value - this.targetY) / this.characterConfig[PPS] * 1000,
                 easing: Easing.linear,
                 useNativeDriver: false
             }).start((successful) => {
@@ -508,26 +551,15 @@ export class CharacterAnimation {
 }
 
 export class CharacterAnimationBuilder {
-    constructor(characterConfig, characterProps) {
-        this._characterConfig = characterConfig;
+    constructor(characterProps) {
         this._characterProps = characterProps;
     }
 
-    get frameIndex() {
-        return this._frameIndex;
-    }
-
-    withFrameIndex(frameIndex) {
-        this._frameIndex = frameIndex;
-        return this;
-    }
-
-    get setFrameIndex() {
-        return this._setFrameIndex;
-    }
-
-    withSetFrameIndex(frameIndex) {
-        this._setFrameIndex = frameIndex;
+    withCoordinates(x, setX, y, setY) {
+        this._x = x;
+        this._y = y;
+        this._setX = setX;
+        this._setY = setY;
         return this;
     }
 
@@ -535,65 +567,56 @@ export class CharacterAnimationBuilder {
         return this._action;
     }
 
-    withAction(action) {
-        this._action = action;
-        return this;
-    }
-
     get setAction() {
         return this._setAction;
     }
 
-    withSetAction(setAction) {
+    withActionState(action, setAction) {
+        this._action = action;
         this._setAction = setAction;
         return this;
-    }
-
-    get characterConfig() {
-        return this._characterConfig;
-    }
-
-    withCharacterConfig(characterConfig) {
-        this._characterConfig = characterConfig;
-        return this;
-    }
-
-    get setCharacterConfig() {
-        return this._setCharacterConfig;
-    }
-
-    withSetCharacterConfig(setCharacterConfig) {
-        this._setCharacterConfig = setCharacterConfig;
-        return this;
-    }
-
-    get characterProps() {
-        return this._characterProps;
     }
 
     get setDirection() {
         return this._setDirection;
     }
 
-    withSetDirection(setDirection) {
-        this._setDirection = setDirection;
-        return this;
-    }
-
     get direction() {
         return this._direction;
     }
 
-    withDirection(direction) {
+    withDirectionState(direction, setDirection) {
         this._direction = direction;
+        this._setDirection = setDirection;
         return this;
+    }
+
+    get x() {
+        return this._x;
+    }
+
+    get setX() {
+        return this._setX;
+    }
+
+    get y() {
+        return this._y;
+    }
+
+    get setY() {
+        return this._setY;
     }
 
     get setGestureY() {
         return this._setGestureY;
     }
 
-    withSetGestureY(setGestureY) {
+    get gestureY() {
+        return this._gestureY;
+    }
+
+    withGestureYState(gestureY, setGestureY) {
+        this._gestureY = gestureY;
         this._setGestureY = setGestureY;
         return this;
     }
@@ -602,16 +625,12 @@ export class CharacterAnimationBuilder {
         return this._syncingY;
     }
 
-    withSyncingY(syncingY) {
-        this._syncingY = syncingY;
-        return this;
-    }
-
     get setSyncingY() {
         return this._setSyncingY;
     }
 
-    withSetSyncingY(setSyncingY) {
+    withSyncingYState(syncingY, setSyncingY) {
+        this._syncingY = syncingY;
         this._setSyncingY = setSyncingY;
         return this;
     }
@@ -620,55 +639,81 @@ export class CharacterAnimationBuilder {
         return this._setTargetY;
     }
 
-    withSetTargetY(setTargetY) {
-        this._setTargetY = setTargetY;
-        return this;
-    }
-
     get targetY() {
         return this._targetY;
     }
 
-    withTargetY(targetY) {
+    withTargetYState(targetY, setTargetY) {
         this._targetY = targetY;
+        this._setTargetY = setTargetY;
         return this;
     }
 
-    get x() {
-        return this._x;
+    get spriteAnimationId() {
+        return this._spriteAnimationId;
     }
 
-    withX(x) {
-        this._x = x;
+    get setSpriteAnimationId() {
+        return this._setSpriteAnimationId;
+    }
+
+    withSpriteAnimationIdState(spriteAnimationId, setSpriteAnimationId) {
+        this._spriteAnimationId = spriteAnimationId;
+        this._setSpriteAnimationId = setSpriteAnimationId;
         return this;
     }
 
-    get y() {
-        return this._y;
+    get frameIndex() {
+        return this._frameIndex;
     }
 
-    withY(y) {
-        this._y = y;
+    get setFrameIndex() {
+        return this._setFrameIndex;
+    }
+
+    withFrameIndexState(frameIndex, setFrameIndex) {
+        this._frameIndex = frameIndex;
+        this._setFrameIndex = setFrameIndex;
         return this;
+    }
+
+    get characterConfig() {
+        return this._characterConfig;
+    }
+
+    get setCharacterConfig() {
+        return this._setCharacterConfig;
+    }
+
+    withCharacterConfigState(characterConfig, setCharacterConfig) {
+        this._characterConfig = characterConfig;
+        this._setCharacterConfig = setCharacterConfig;
+        return this;
+    }
+
+    get screenHeight() {
+        return this._screenHeight;
+    }
+
+    get setScreenHeight() {
+        return this._setScreenHeight;
+    }
+
+    withScreenHeightState(screenHeight, setScreenHeight) {
+        this._screenHeight = screenHeight;
+        this._setScreenHeight = setScreenHeight;
+        return this;
+    }
+
+
+    get characterProps() {
+        return this._characterProps;
     }
 
     get pressY() {
-        return this._pressY;
+        return this._gestureY;
     }
 
-    withPressY(pressY) {
-        this._pressY = pressY;
-        return this;
-    }
-
-    get pps() {
-        return this._pps;
-    }
-
-    withPps(pps) {
-        this._pps = pps;
-        return this;
-    }
 
     get backgroundInfo() {
         return this._backgroundInfo;
@@ -683,31 +728,13 @@ export class CharacterAnimationBuilder {
         return this._backgroundOffset;
     }
 
+    get positions() {
+        return this._positions;
+    }
+
     withBackgroundOffset(backgroundOffset) {
         this._backgroundOffset = backgroundOffset;
         return this;
-    }
-
-    get spriteAnimationId() {
-        return this._spriteAnimationId;
-    }
-
-    withSpriteAnimationId(spriteAnimationId) {
-        this._spriteAnimationId = spriteAnimationId;
-        return this;
-    }
-
-    get setSpriteAnimationId() {
-        return this._setSpriteAnimationId;
-    }
-
-    withSetSpriteAnimationId(setSpriteAnimationId) {
-        this._setSpriteAnimationId = setSpriteAnimationId;
-        return this;
-    }
-
-    get positions() {
-        return this._positions;
     }
 
     withPositions(positions) {
