@@ -24,7 +24,7 @@ const CharacterComponent = (props) => {
     const [clickEvent, setClickEvent] = useState(false);
     const [screenHeight, setScreenHeight] = useState(Dimensions.get('window').height);
     const [gestureY, setGestureY] = useState(0);
-    const [syncingY, setSyncingY] = useState(false);
+    const [isSyncingYGesture, setIsSyncingYGesture] = useState(false);
     const [targetY, setTargetY] = useState(0);
 
     const backgroundInfo = useContext(BackgroundContext);
@@ -37,7 +37,7 @@ const CharacterComponent = (props) => {
 
     const characterAnimation = new CharacterAnimationBuilder(character)
         .withGestureYState(gestureY, setGestureY)
-        .withSyncingYState(syncingY, setSyncingY)
+        .withIsSyncingYGestureState(isSyncingYGesture, setIsSyncingYGesture)
         .withTargetYState(targetY, setTargetY)
         .withSpriteAnimationIdState(spriteAnimationId, setSpriteAnimationId)
         .withFrameIndexState(frameIndex, setFrameIndex)

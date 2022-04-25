@@ -6,11 +6,10 @@ export class CharacterAnimation {
         this._character = builder.character;
         this._frameIndex = builder.frameIndex;
         this._setFrameIndex = builder.setFrameIndex;
-        this._characterActionAnimationConfig = builder.characterActionAnimationConfig;
         this._setCharacterActionAnimationConfig = builder.setCharacterActionAnimationConfig;
         this._setGestureY = builder.setGestureY;
-        this._syncingY = builder.syncingY;
-        this._setSyncingY = builder.setSyncingY;
+        this._isSyncingYGesture = builder.isSyncingYGesture;
+        this._setIsSyncingYGesture = builder.setIsSyncingYGesture;
         this._setTargetY = builder.setTargetY;
         this._targetY = builder.targetY;
         this._pressY = builder.pressY;
@@ -67,12 +66,12 @@ export class CharacterAnimation {
         return this._setTargetY;
     }
 
-    get setSyncingY() {
-        return this._setSyncingY;
+    get setIsSyncingYGesture() {
+        return this._setIsSyncingYGesture;
     }
 
-    get syncingY() {
-        return this._syncingY;
+    get isSyncingYGesture() {
+        return this._isSyncingYGesture;
     }
 
     get pressY() {
@@ -87,12 +86,12 @@ export class CharacterAnimation {
         return this._setScreenHeight;
     }
 
-    changedHorizontalDirection(gestureX) {
+    isHorizontalDirectionChanged(gestureX) {
         return gestureX - this.character.props.spriteWidth / 2 < this.character.x._value && this.character.direction == RIGHT ||
             gestureX - this.character.props.spriteWidth / 2 >= this.character.x._value && this.character.direction === LEFT;
     }
 
-    changedVerticalDirection(gestureY) {
+    isVerticalDirectionChanged(gestureY) {
         return gestureY - this.character.props.spriteHeight / 2 < this.character.y._value && gestureY - this.character.props.spriteHeight / 2 >= this.targetY ||
             gestureY - this.character.props.spriteHeight / 2 >= this.character.y._value && gestureY - this.character.props.spriteHeight / 2 <= this.targetY;
     }
@@ -443,7 +442,7 @@ export class CharacterAnimation {
     }
 
     stopSyncYToGesture(absoluteX, absoluteY) {
-        this.setSyncingY(false);
+        this.setIsSyncingYGesture(false);
         this.setTargetY(this.character.y._value);
         this.setGestureY(this.character.y._value);
         this.setFrameIndex(0);
@@ -458,22 +457,22 @@ export class CharacterAnimation {
 
         this.setGestureY(absoluteY);
 
-        if (this.changedHorizontalDirection(absoluteX)) {
+        if (this.isHorizontalDirectionChanged(absoluteX)) {
             clearInterval(this.spriteAnimationId);
             this.handleDirectionChange(absoluteX, absoluteY);
             this.animateCharacter(absoluteX, absoluteY, WALK, this.character.direction === RIGHT ? LEFT : RIGHT);
         }
 
-        if (this.changedVerticalDirection()) {
-            this.setSyncingY(false);
+        if (this.isVerticalDirectionChanged()) {
+            this.setIsSyncingYGesture(false);
         }
 
         if (this.pressY !== this.targetY) {
             this.setTargetY(this.pressY - this.character.props.spriteHeight / 2);
         }
 
-        if (!this.syncingY && this.character.y._value !== this.targetY) {
-            this.setSyncingY(true);
+        if (!this.isSyncingYGesture && this.character.y._value !== this.targetY) {
+            this.setIsSyncingYGesture(true);
 
             let characterActionAnimationConfig = this.character.props.characterAnimationConfig[this.character.direction][this.character.action];
             Animated.timing(this.character.y, {
@@ -482,7 +481,7 @@ export class CharacterAnimation {
                 easing: Easing.linear,
                 useNativeDriver: false
             }).start((successful) => {
-                this.setSyncingY(false);
+                this.setIsSyncingYGesture(false);
             });
         }
     }
@@ -511,17 +510,17 @@ export class CharacterAnimationBuilder {
         return this;
     }
 
-    get syncingY() {
-        return this._syncingY;
+    get isSyncingYGesture() {
+        return this._isSyncingYGesture;
     }
 
-    get setSyncingY() {
-        return this._setSyncingY;
+    get setIsSyncingYGesture() {
+        return this._setIsSyncingYGesture;
     }
 
-    withSyncingYState(syncingY, setSyncingY) {
-        this._syncingY = syncingY;
-        this._setSyncingY = setSyncingY;
+    withIsSyncingYGestureState(isSyncingYGesture, setIsSyncingYGesture) {
+        this._isSyncingYGesture = isSyncingYGesture;
+        this._setIsSyncingYGesture = setIsSyncingYGesture;
         return this;
     }
 
