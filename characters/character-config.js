@@ -1,4 +1,4 @@
-const CHARACTER_CONFIG = {right : {
+const CHARACTER_ANIMATION_CONFIG = {right : {
         walk : {
             offsets      : [1, 2, 3, 4, 5, 6],
             fps          : 7,
@@ -51,5 +51,5 @@ const CHARACTER_CONFIG = {right : {
             loop         : true}
     }};
 
-export { CHARACTER_CONFIG };
-export default CHARACTER_CONFIG;
+export { CHARACTER_ANIMATION_CONFIG };
+export default CHARACTER_ANIMATION_CONFIG;

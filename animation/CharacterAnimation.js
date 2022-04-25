@@ -3,24 +3,16 @@ import {Animated, Dimensions, Easing} from "react-native";
 
 export class CharacterAnimation {
     constructor(builder) {
+        this._character = builder.character;
         this._frameIndex = builder.frameIndex;
         this._setFrameIndex = builder.setFrameIndex;
-        this._action = builder.action;
-        this._setAction = builder.setAction;
-        this._characterConfig = builder.characterConfig;
-        this._setCharacterConfig = builder.setCharacterConfig;
-        this._characterProps = builder.characterProps;
-        this._direction = builder.direction;
-        this._setDirection = builder.setDirection;
+        this._characterActionAnimationConfig = builder.characterActionAnimationConfig;
+        this._setCharacterActionAnimationConfig = builder.setCharacterActionAnimationConfig;
         this._setGestureY = builder.setGestureY;
         this._syncingY = builder.syncingY;
         this._setSyncingY = builder.setSyncingY;
         this._setTargetY = builder.setTargetY;
         this._targetY = builder.targetY;
-        this._y = builder.y;
-        this._setY = builder.setY;
-        this._x = builder.x;
-        this._setX = builder.setX;
         this._pressY = builder.pressY;
         this._backgroundInfo = builder.backgroundInfo;
         this._backgroundOffset = builder.backgroundOffset;
@@ -31,32 +23,8 @@ export class CharacterAnimation {
         this._setScreenHeight = builder.setScreenHeight;
     }
 
-    get characterProps() {
-        return this._characterProps;
-    }
-
-    get x() {
-        return this._x;
-    }
-
-    get setX() {
-        return this._setX;
-    }
-
-    get y() {
-        return this._y;
-    }
-
-    get setY() {
-        return this._setY;
-    }
-
-    get direction() {
-        return this._direction;
-    }
-
-    get setDirection() {
-        return this._setDirection;
+    get character() {
+        return this._character;
     }
 
     get setGestureY() {
@@ -71,16 +39,12 @@ export class CharacterAnimation {
         return this._backgroundInfo;
     }
 
-    get setAction() {
-        return this._setAction;
-    }
-
     get setFrameIndex() {
         return this._setFrameIndex;
     }
 
-    get setCharacterConfig() {
-        return this._setCharacterConfig;
+    get setCharacterActionAnimationConfig() {
+        return this._setCharacterActionAnimationConfig;
     }
 
     get backgroundOffset() {
@@ -119,42 +83,18 @@ export class CharacterAnimation {
         return this._targetY;
     }
 
-    get characterConfig() {
-        return this._characterConfig;
-    }
-
-    get pps() {
-        return this._pps;
-    }
-
     get setScreenHeight() {
         return this._setScreenHeight;
     }
 
-    handleScreenOrientationChange() {
-        this.setScreenHeight(Dimensions.get('window').height);
-
-        let barbarianXDelta = this.positions['positions']['barbarian']['x'] + Dimensions.get('window').height - this.characterProps.spriteWidth;
-        if (this.characterProps.bindClicks) {
-            this.setX(new Animated.Value(CharacterAnimation.getDefaultX(this.characterProps)));
-        } else {
-            this.x.setOffset(barbarianXDelta);
-        }
-        this.setY(new Animated.Value(CharacterAnimation.getBottomY(this.characterProps)));
-
-        if (!this.characterProps.bindClicks) {
-            this.animateCharacter(-1*barbarianXDelta, CharacterAnimation.getBottomY(this.characterProps) + this.characterProps.spriteHeight - this.characterProps.spriteHeight, WALK, 'left');
-        }
+    changedHorizontalDirection(gestureX) {
+        return gestureX - this.character.props.spriteWidth / 2 < this.character.x._value && this.character.direction == RIGHT ||
+            gestureX - this.character.props.spriteWidth / 2 >= this.character.x._value && this.character.direction === LEFT;
     }
 
-    changedHorizontalDirection(pressX) {
-        return pressX - this.characterProps.spriteWidth / 2 < this.x._value && this.direction == RIGHT ||
-            pressX - this.characterProps.spriteWidth / 2 >= this.x._value && this.direction === LEFT;
-    }
-
-    changedVerticalDirection(pressY) {
-        return pressY - this.characterProps.spriteHeight / 2 < this.y._value && pressY - this.characterProps.spriteHeight / 2 >= this.targetY ||
-            pressY - this.characterProps.spriteHeight / 2 >= this.y._value && pressY - this.characterProps.spriteHeight / 2 <= this.targetY;
+    changedVerticalDirection(gestureY) {
+        return gestureY - this.character.props.spriteHeight / 2 < this.character.y._value && gestureY - this.character.props.spriteHeight / 2 >= this.targetY ||
+            gestureY - this.character.props.spriteHeight / 2 >= this.character.y._value && gestureY - this.character.props.spriteHeight / 2 <= this.targetY;
     }
 
     /**
@@ -175,10 +115,10 @@ export class CharacterAnimation {
      * @returns {boolean} true if the character is changing direction to testDir, false otherwise.
      */
     isChangingDirectionTo(pageX, pageY, testDir) {
-        let xValue = this.x._value !== undefined ? this.x._value : CharacterAnimation.getDefaultX(this.characterProps);
+        let xValue = this.character.x._value !== undefined ? this.character.x._value : CharacterAnimation.getDefaultX(this.character.props);
         return testDir === LEFT
-            ? this.direction === RIGHT && pageX < xValue + this.characterProps.spriteWidth / 2
-            : this.direction === LEFT && pageX >= xValue + this.characterProps.spriteWidth / 2;
+            ? this.character.direction === RIGHT && pageX < xValue + this.character.props.spriteWidth / 2
+            : this.character.direction === LEFT && pageX >= xValue + this.character.props.spriteWidth / 2;
     }
 
     /**
@@ -187,7 +127,7 @@ export class CharacterAnimation {
      * @param dir the direction the main character is moving
      */
     setBackgroundDirection(dir) {
-        if (this.characterProps.bindClicks) {
+        if (this.character.props.bindClicks) {
 
             if (this.backgroundInfo['backgroundInfo'] === undefined) {
                 this.backgroundInfo['backgroundInfo'] = {'pps' : 0, 'direction': dir === LEFT ? RIGHT : LEFT};
@@ -207,9 +147,9 @@ export class CharacterAnimation {
         clearInterval(this.spriteAnimationId);
         let dir = this.isChangingDirectionTo(pageX, pageY, LEFT)
             ? LEFT
-            : this.isChangingDirectionTo(pageX, pageY, RIGHT) ? RIGHT : this.direction;
+            : this.isChangingDirectionTo(pageX, pageY, RIGHT) ? RIGHT : this.character.direction;
 
-        this.setDirection(dir);
+        this.character.setDirection(dir);
 
         this.setBackgroundDirection(dir);
     }
@@ -218,11 +158,11 @@ export class CharacterAnimation {
      * Stops the character movement
      */
     stopCharacterMovement() {
-        if (this.x !== undefined) {
-            Animated.timing(this.x, {useNativeDriver: false}).stop();
+        if (this.character.x !== undefined) {
+            Animated.timing(this.character.x, {useNativeDriver: false}).stop();
         }
-        if (this.y != undefined) {
-            Animated.timing(this.y, {useNativeDriver: false}).stop();
+        if (this.character.y != undefined) {
+            Animated.timing(this.character.y, {useNativeDriver: false}).stop();
         }
 
     }
@@ -235,7 +175,7 @@ export class CharacterAnimation {
      * @param pps the pixels per second of the character
      */
     setBackgroundPps(dir, pps) {
-        if (this.characterProps.bindClicks) {
+        if (this.character.props.bindClicks) {
             if (this.backgroundInfo['backgroundInfo'] === undefined) {
                 this.backgroundInfo['backgroundInfo'] = {'pps' : 0, 'direction': dir === LEFT ? RIGHT : LEFT};
             }
@@ -282,11 +222,11 @@ export class CharacterAnimation {
     animateBackground(action, direction) {
 
         this.stopBackgroundAnimation();
-        if (!this.characterProps.bindClicks || !SCROLLING_ACTIONS.includes(action)) {
+        if (!this.character.props.bindClicks || !SCROLLING_ACTIONS.includes(action)) {
             return;
         }
 
-        let characterConfig = this.characterProps.characterConfig[direction][action];
+        let characterActionAnimationConfig = this.character.props.characterAnimationConfig[direction][action];
 
         let toValue = 0;
         let distance = 0;
@@ -302,13 +242,13 @@ export class CharacterAnimation {
             distance = Math.abs(this.backgroundOffset._value - toValue);
         }
 
-        if (this.characterProps.bindClicks) {
+        if (this.character.props.bindClicks) {
 
             Animated.timing(
                 this.backgroundOffset,
                 {
                     toValue: toValue,
-                    duration: distance / characterConfig[PPS] * 1000,
+                    duration: distance / characterActionAnimationConfig[PPS] * 1000,
                     easing: Easing.linear,
                     useNativeDriver: false
                 }
@@ -337,12 +277,12 @@ export class CharacterAnimation {
      * Records the coordinates for the character to the parent shared state.
      */
     recordPosition() {
-        if (this.positions['positions'][this.characterProps.id] === undefined) {
-            this.positions['positions'][this.characterProps.id] = {x : this.x._value, y : this.y._value};
+        if (this.positions['positions'][this.character.props.id] === undefined) {
+            this.positions['positions'][this.character.props.id] = {x : this.character.x._value, y : this.character.y._value};
         }
 
-        this.positions['positions'][this.characterProps.id]['x'] = this.x._value;
-        this.positions['positions'][this.characterProps.id]['y'] = this.y._value;
+        this.positions['positions'][this.character.props.id]['x'] = this.character.x._value;
+        this.positions['positions'][this.character.props.id]['y'] = this.character.y._value;
 
         this.positions.setCharacterPositions(this.positions.positions);
     }
@@ -356,17 +296,17 @@ export class CharacterAnimation {
      * @param toY the y coordinate to move to
      * @param act the action to animate
      * @param dir the direction the character is facing (left or right)
-     * @param characterConfig the character configuration
      * @returns {number} the sprite animation id
      */
-    animateCharacterSprite(toX, toY, act, dir, characterConfig) {
+    animateCharacterSprite(toX, toY, act, dir) {
         let index = 0;
-        let timeout = characterConfig[FPS] === 0 ? 0 : 1000 / characterConfig[FPS];
+        let characterActionAnimationConfig = this.character.props.characterAnimationConfig[dir][act];
+        let timeout = characterActionAnimationConfig[FPS] === 0 ? 0 : 1000 / characterActionAnimationConfig[FPS];
         let initialBackgroundPps = this.backgroundInfo['backgroundInfo'][PPS] === undefined ? 0 : this.backgroundInfo['backgroundInfo'][PPS];
         let animationId = setInterval(() => {
 
-            if (index > characterConfig['offsets'].length - 1) {
-                if (characterConfig['loop'] === false) {
+            if (index > characterActionAnimationConfig['offsets'].length - 1) {
+                if (characterActionAnimationConfig['loop'] === false) {
                     clearInterval(animationId);
                     return;
                 } else {
@@ -375,7 +315,7 @@ export class CharacterAnimation {
             }
             this.recordPosition();
 
-            if (!this.characterProps.bindClicks) {
+            if (!this.character.props.bindClicks) {
                 let backgroundPps = this.backgroundInfo['backgroundInfo'][PPS] === undefined ? 0 : this.backgroundInfo['backgroundInfo'][PPS];
                 if (backgroundPps != initialBackgroundPps) {
                     // If background is moving in the same direction of the character add to the pps, otherwise subtract
@@ -415,8 +355,8 @@ export class CharacterAnimation {
      * @returns {number} the distance
      */
     getDistanceToCoordinate(toX, toY) {
-        return Math.sqrt(Math.pow(Math.abs(toX - this.x._value), 2) +
-            Math.pow(Math.abs(toY - this.y._value), 2))
+        return Math.sqrt(Math.pow(Math.abs(toX - this.character.x._value), 2) +
+            Math.pow(Math.abs(toY - this.character.y._value), 2))
     }
 
     /**
@@ -432,11 +372,11 @@ export class CharacterAnimation {
 
         if (pps > 0/* && !props.bindClicks*/) {
 
-            if (this.characterProps.bindClicks) {
-                toX = this.x._value;
-                toY = Math.min(toY, CharacterAnimation.getBottomY(this.characterProps));
+            if (this.character.props.bindClicks) {
+                toX = this.character.x._value;
+                toY = Math.min(toY, CharacterAnimation.getBottomY(this.character.props));
                 this.setTargetY(toY);
-                console.log('animating %s toY: %s', this.characterProps.id, toY);
+                console.log('animating %s toY: %s', this.character.props.id, toY);
             }
 
             let duration = pps === 0
@@ -445,7 +385,7 @@ export class CharacterAnimation {
 
             Animated.parallel([
                     Animated.timing(
-                        this.x,
+                        this.character.x,
                         {
                             toValue: toX,
                             duration: duration,
@@ -453,7 +393,7 @@ export class CharacterAnimation {
                             useNativeDriver: false
                         }),
                     Animated.timing(
-                        this.y,
+                        this.character.y,
                         {
                             toValue: toY,
                             duration: duration,
@@ -463,8 +403,7 @@ export class CharacterAnimation {
 
                 ]
             ).start(({ finished }) => {
-                if (!this.characterProps.bindClicks) {
-                    console.log('==> stop animation id %s', animationId);
+                if (!this.character.props.bindClicks) {
                     clearInterval(animationId);
                 }
             });
@@ -482,49 +421,47 @@ export class CharacterAnimation {
     animateCharacter(toX, toY, act, dir, fpsAdjust = 0){
 
         this.stopCharacterMovement()
-        this.setAction(act);
+        this.character.setAction(act);
         this.setFrameIndex(0);
 
-        let characterConfig = this.characterProps.characterConfig[dir][act];
-        this.setBackgroundPps(dir, characterConfig[PPS]);
-        this.setCharacterConfig(characterConfig);
+        let characterActionAnimationConfig = this.character.props.characterAnimationConfig[dir][act];
+
+
+        this.setBackgroundPps(dir, characterActionAnimationConfig[PPS]);
 
         this.animateBackground(act, dir);
-        let spriteAnimationId = this.animateCharacterSprite(toX, toY, act, dir, characterConfig);
+        let spriteAnimationId = this.animateCharacterSprite(toX, toY, act, dir);
 
 
-        //if (!props.bindClicks) {
-        this.animateCharacterMovement(toX, toY, spriteAnimationId, characterConfig[PPS] + fpsAdjust);
-        //}
+        this.animateCharacterMovement(toX, toY, spriteAnimationId, characterActionAnimationConfig[PPS] + fpsAdjust);
     }
 
     startSyncYToGesture(absoluteX, absoluteY) {
         this.setGestureY(absoluteY);
         clearInterval(this.spriteAnimationId);
-        this.animateCharacter(absoluteX,absoluteY - this.characterProps.spriteHeight / 2, WALK, this.direction);
+        this.animateCharacter(absoluteX,absoluteY - this.character.props.spriteHeight / 2, WALK, this.character.direction);
     }
 
     stopSyncYToGesture(absoluteX, absoluteY) {
         this.setSyncingY(false);
-        this.setTargetY(this.y._value);
-        this.setGestureY(this.y._value);
+        this.setTargetY(this.character.y._value);
+        this.setGestureY(this.character.y._value);
+        this.setFrameIndex(0);
         clearInterval(this.spriteAnimationId);
-        this.animateCharacter(absoluteX, absoluteY, STOP, this.direction);
+        this.animateCharacter(absoluteX, absoluteY, STOP, this.character.direction);
     }
 
     handleSyncYToGestureChange(absoluteX, absoluteY) {
-        if (!this.characterProps.bindClicks) {
+        if (!this.character.props.bindClicks) {
             return;
         }
-
-
 
         this.setGestureY(absoluteY);
 
         if (this.changedHorizontalDirection(absoluteX)) {
             clearInterval(this.spriteAnimationId);
             this.handleDirectionChange(absoluteX, absoluteY);
-            this.animateCharacter(absoluteX, absoluteY, WALK, this.direction === RIGHT ? LEFT : RIGHT);
+            this.animateCharacter(absoluteX, absoluteY, WALK, this.character.direction === RIGHT ? LEFT : RIGHT);
         }
 
         if (this.changedVerticalDirection()) {
@@ -532,15 +469,16 @@ export class CharacterAnimation {
         }
 
         if (this.pressY !== this.targetY) {
-            this.setTargetY(this.pressY - this.characterProps.spriteHeight / 2);
+            this.setTargetY(this.pressY - this.character.props.spriteHeight / 2);
         }
 
-        if (!this.syncingY && this.y._value !== this.targetY) {
+        if (!this.syncingY && this.character.y._value !== this.targetY) {
             this.setSyncingY(true);
 
-            Animated.timing(this.y, {
+            let characterActionAnimationConfig = this.character.props.characterAnimationConfig[this.character.direction][this.character.action];
+            Animated.timing(this.character.y, {
                 toValue : this.targetY,
-                duration : Math.abs(this.y._value - this.targetY) / this.characterConfig[PPS] * 1000,
+                duration : Math.abs(this.character.y._value - this.targetY) / characterActionAnimationConfig[PPS] * 1000,
                 easing: Easing.linear,
                 useNativeDriver: false
             }).start((successful) => {
@@ -551,60 +489,12 @@ export class CharacterAnimation {
 }
 
 export class CharacterAnimationBuilder {
-    constructor(characterProps) {
-        this._characterProps = characterProps;
+    constructor(character) {
+        this._character = character;
     }
 
-    withCoordinates(x, setX, y, setY) {
-        this._x = x;
-        this._y = y;
-        this._setX = setX;
-        this._setY = setY;
-        return this;
-    }
-
-    get action() {
-        return this._action;
-    }
-
-    get setAction() {
-        return this._setAction;
-    }
-
-    withActionState(action, setAction) {
-        this._action = action;
-        this._setAction = setAction;
-        return this;
-    }
-
-    get setDirection() {
-        return this._setDirection;
-    }
-
-    get direction() {
-        return this._direction;
-    }
-
-    withDirectionState(direction, setDirection) {
-        this._direction = direction;
-        this._setDirection = setDirection;
-        return this;
-    }
-
-    get x() {
-        return this._x;
-    }
-
-    get setX() {
-        return this._setX;
-    }
-
-    get y() {
-        return this._y;
-    }
-
-    get setY() {
-        return this._setY;
+    get character() {
+        return this._character;
     }
 
     get setGestureY() {
@@ -677,18 +567,8 @@ export class CharacterAnimationBuilder {
         return this;
     }
 
-    get characterConfig() {
-        return this._characterConfig;
-    }
-
-    get setCharacterConfig() {
-        return this._setCharacterConfig;
-    }
-
-    withCharacterConfigState(characterConfig, setCharacterConfig) {
-        this._characterConfig = characterConfig;
-        this._setCharacterConfig = setCharacterConfig;
-        return this;
+    get setCharacterActionAnimationConfig() {
+        return this._setCharacterActionAnimationConfig;
     }
 
     get screenHeight() {
@@ -705,10 +585,6 @@ export class CharacterAnimationBuilder {
         return this;
     }
 
-
-    get characterProps() {
-        return this._characterProps;
-    }
 
     get pressY() {
         return this._gestureY;
