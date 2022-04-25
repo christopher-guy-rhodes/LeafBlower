@@ -14,17 +14,12 @@ export class CharacterAnimation {
         this._setTargetY = builder.setTargetY;
         this._targetY = builder.targetY;
         this._pressY = builder.pressY;
-        this._backgroundInfo = builder.backgroundInfo;
-        this._backgroundOffset = builder.backgroundOffset;
         this._spriteAnimationId = builder.spriteAnimationId;
         this._setSpriteAnimationId = builder.setSpriteAnimationId;
         this._positions = builder.positions;
         this._screenHeight = builder.screenHeight;
         this._setScreenHeight = builder.setScreenHeight;
-        this._backgroundAnimation =
-            new BackgroundAnimationBuilder(builder.backgroundInfo)
-                .withCharacterProps(builder.character.props)
-                .withBackgroundOffset(builder.backgroundOffset).build();
+        this._backgroundAnimation = builder.backgroundAnimation;
     }
 
     get backgroundAnimation() {
@@ -448,10 +443,6 @@ export class CharacterAnimationBuilder {
         return this;
     }
 
-    get setCharacterActionAnimationConfig() {
-        return this._setCharacterActionAnimationConfig;
-    }
-
     get screenHeight() {
         return this._screenHeight;
     }
@@ -466,36 +457,25 @@ export class CharacterAnimationBuilder {
         return this;
     }
 
-
     get pressY() {
         return this._gestureY;
-    }
-
-
-    get backgroundInfo() {
-        return this._backgroundInfo;
-    }
-
-    withBackgroundInfo(backgroundInfo) {
-        this._backgroundInfo = backgroundInfo;
-        return this;
-    }
-
-    get backgroundOffset() {
-        return this._backgroundOffset;
     }
 
     get positions() {
         return this._positions;
     }
 
-    withBackgroundOffset(backgroundOffset) {
-        this._backgroundOffset = backgroundOffset;
+    withPositions(positions) {
+        this._positions = positions;
         return this;
     }
 
-    withPositions(positions) {
-        this._positions = positions;
+    get backgroundAnimation() {
+        return this._backgroundAnimation;
+    }
+
+    withBackgroundAnimation(backgroundAnimation) {
+        this._backgroundAnimation = backgroundAnimation;
         return this;
     }
 

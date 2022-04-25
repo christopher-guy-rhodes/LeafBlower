@@ -9,6 +9,7 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { CharacterAnimation, CharacterAnimationBuilder } from "../animation/CharacterAnimation";
 import {ScreenOrientationHelperBuilder} from "../screen/ScreenOrientationHelper";
 import {CharacterBuilder as ChracterBuilder} from "./Character";
+import {BackgroundAnimationBuilder} from "../animation/BackgroundAnimation";
 
 const LANDSCAPE_ORIENTATIONS =
     [ScreenOrientation.Orientation.LANDSCAPE_LEFT, ScreenOrientation.Orientation.LANDSCAPE_RIGHT];
@@ -35,15 +36,18 @@ const CharacterComponent = (props) => {
         .withActionState(action, setAction)
         .withDirectionState(direction, setDirection).build();
 
+    const backgroundAnimation = new BackgroundAnimationBuilder(backgroundInfo)
+        .withCharacterProps(props)
+        .withBackgroundOffset(backgroundOffset).build();
+
     const characterAnimation = new CharacterAnimationBuilder(character)
+        .withBackgroundAnimation(backgroundAnimation)
         .withGestureYState(gestureY, setGestureY)
         .withIsSyncingYGestureState(isSyncingYGesture, setIsSyncingYGesture)
         .withTargetYState(targetY, setTargetY)
         .withSpriteAnimationIdState(spriteAnimationId, setSpriteAnimationId)
         .withFrameIndexState(frameIndex, setFrameIndex)
         .withScreenHeightState(screenHeight, setScreenHeight)
-        .withBackgroundInfo(backgroundInfo)
-        .withBackgroundOffset(backgroundOffset)
         .withPositions(positions).build();
 
     const screenOrientationHelper = new ScreenOrientationHelperBuilder(props)
