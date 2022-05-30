@@ -7,7 +7,7 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import { BackgroundContext } from "../game/background-context";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { CharacterAnimation } from "../animation/CharacterAnimation";
-import {ScreenOrientationHelperBuilder} from "../screen/ScreenOrientationHelper";
+import {ScreenOrientationHelper} from "../screen/ScreenOrientationHelper";
 import {Character } from "./Character";
 import {BackgroundAnimation} from "../animation/BackgroundAnimation";
 
@@ -55,10 +55,11 @@ const CharacterComponent = (props) => {
         screenHeight: {state : [screenHeight, setScreenHeight]},
         positions: positions});
 
-    const screenOrientationHelper = new ScreenOrientationHelperBuilder(props)
-        .withCoordinates(x, setX, y, setY)
-        .withPositions(positions)
-        .withScreenHeightState(screenHeight, setScreenHeight).build();
+    const screenOrientationHelper = new ScreenOrientationHelper({
+        characterProps: props,
+        coordinates: [x, setX, y, setY],
+        positions: positions,
+        screenHeight: {state: [screenHeight, setScreenHeight]}});
 
 
     const HEIGHT_OFFSET = props.characterAnimationConfig[direction][action]['heightOffset'];

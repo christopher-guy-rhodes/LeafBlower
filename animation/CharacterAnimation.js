@@ -4,23 +4,23 @@ import {BackgroundAnimationBuilder} from "./BackgroundAnimation";
 import {Character} from "../characters/Character";
 
 export class CharacterAnimation {
-    constructor(builder) {
-        this._character = builder.character;
-        this._frameIndex = builder.frameIndex.state[0];
-        this._setFrameIndex = builder.frameIndex.state[1];
+    constructor(props) {
+        this._character = props.character;
+        this._frameIndex = props.frameIndex.state[0];
+        this._setFrameIndex = props.frameIndex.state[1];
         //this._setCharacterActionAnimationConfig = builder.setCharacterActionAnimationConfig;
-        this._setGestureY = builder.gestureY.state[1];
-        this._isSyncingYGesture = builder.isSyncingYGesture.state[0];
-        this._setIsSyncingYGesture = builder.isSyncingYGesture.state[1];
-        this._setTargetY = builder.targetY.state[1];
-        this._targetY = builder.targetY.state[0];
-        this._pressY = builder.gestureY.state[0];
-        this._spriteAnimationId = builder.spriteAnimationId.state[0];
-        this._setSpriteAnimationId = builder.spriteAnimationId.state[1];
-        this._positions = builder.positions;
-        this._screenHeight = builder.screenHeight.state[0];
-        this._setScreenHeight = builder.screenHeight.state[1];
-        this._backgroundAnimation = builder.backgroundAnimation;
+        this._setGestureY = props.gestureY.state[1];
+        this._isSyncingYGesture = props.isSyncingYGesture.state[0];
+        this._setIsSyncingYGesture = props.isSyncingYGesture.state[1];
+        this._setTargetY = props.targetY.state[1];
+        this._targetY = props.targetY.state[0];
+        this._pressY = props.gestureY.state[0];
+        this._spriteAnimationId = props.spriteAnimationId.state[0];
+        this._setSpriteAnimationId = props.spriteAnimationId.state[1];
+        this._positions = props.positions;
+        this._screenHeight = props.screenHeight.state[0];
+        this._setScreenHeight = props.screenHeight.state[1];
+        this._backgroundAnimation = props.backgroundAnimation;
     }
 
     get backgroundAnimation() {

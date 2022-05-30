@@ -4,13 +4,13 @@ import {CharacterAnimation} from "../animation/CharacterAnimation";
 
 export class ScreenOrientationHelper {
 
-    constructor(builder) {
-        this._characterProps = builder.characterProps;
-        this._positions = builder.positions;
-        this._setScreenHeight = builder.setScreenHeight;
-        this._x = builder.x;
-        this._setX = builder.setX;
-        this._setY = builder.setY;
+    constructor(props) {
+        this._characterProps = props.characterProps;
+        this._positions = props.positions;
+        this._setScreenHeight = props.screenHeight.state[0];
+        this._x = props.coordinates[0];
+        this._setX = props.coordinates[1];
+        this._setY = props.coordinates[3];
     }
 
     get characterProps() {
@@ -47,58 +47,5 @@ export class ScreenOrientationHelper {
             this.x.setOffset(barbarianXDelta);
         }
         this.setY(new Animated.Value(CharacterAnimation.getBottomY(this.characterProps)));
-    }
-}
-
-export class ScreenOrientationHelperBuilder {
-    constructor(characterProps) {
-        this._characterProps = characterProps;
-    }
-
-    get characterProps() {
-        return this._characterProps;
-    }
-
-    get x() {
-        return this._x;
-    }
-
-    get setX() {
-        return this._setX;
-    }
-
-    get setY() {
-        return this._setY;
-    }
-
-    withCoordinates(x, setX, y, setY) {
-        this._x = x;
-        this._setX = setX;
-        this._y = y;
-        this._setY = setY;
-        return this;
-    }
-
-    withPositions(positions) {
-        this._positions = positions;
-        return this;
-    }
-
-    get positions() {
-        return this._positions;
-    }
-
-    get setScreenHeight() {
-        return this._setScreenHeight;
-    }
-
-    withScreenHeightState(screenHeight, setScreenHeight) {
-        this._screenHeight = screenHeight;
-        this._setScreenHeight = setScreenHeight;
-        return this;
-    }
-
-    build() {
-        return new ScreenOrientationHelper(this);
     }
 }
