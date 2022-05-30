@@ -6,10 +6,10 @@ import backgroundImage from "../assets/backgrounds/scrolling-desert.png";
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { BackgroundContext } from "../game/background-context";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { CharacterAnimation, CharacterAnimationBuilder } from "../animation/CharacterAnimation";
+import { CharacterAnimation } from "../animation/CharacterAnimation";
 import {ScreenOrientationHelperBuilder} from "../screen/ScreenOrientationHelper";
-import {Character, CharacterBuilder as ChracterBuilder} from "./Character";
-import {BackgroundAnimationBuilder} from "../animation/BackgroundAnimation";
+import {Character } from "./Character";
+import {BackgroundAnimation} from "../animation/BackgroundAnimation";
 
 const LANDSCAPE_ORIENTATIONS =
     [ScreenOrientation.Orientation.LANDSCAPE_LEFT, ScreenOrientation.Orientation.LANDSCAPE_RIGHT];
@@ -31,24 +31,29 @@ const CharacterComponent = (props) => {
     const backgroundInfo = useContext(BackgroundContext);
     const positions = useContext(PositionContext);
 
-    const character = new ChracterBuilder(props)
-        .withCoordinates(x, setX, y, setY)
-        .withActionState(action, setAction)
-        .withDirectionState(direction, setDirection).build();
+    const character = new Character({
+        props: props,
+        x: { state: [x, setX]},
+        y: { state: [y, setY]},
+        action: { state: [action, setAction]},
+        direction: { state: [direction, setDirection]},
+    });
 
-    const backgroundAnimation = new BackgroundAnimationBuilder(backgroundInfo)
-        .withCharacterProps(props)
-        .withBackgroundOffset(backgroundOffset).build();
+    const backgroundAnimation = new BackgroundAnimation({
+        backgroundInfo: backgroundInfo,
+        backgroundOffset: backgroundOffset,
+        characterProps: props});
 
-    const characterAnimation = new CharacterAnimationBuilder(character)
-        .withBackgroundAnimation(backgroundAnimation)
-        .withGestureYState(gestureY, setGestureY)
-        .withIsSyncingYGestureState(isSyncingYGesture, setIsSyncingYGesture)
-        .withTargetYState(targetY, setTargetY)
-        .withSpriteAnimationIdState(spriteAnimationId, setSpriteAnimationId)
-        .withFrameIndexState(frameIndex, setFrameIndex)
-        .withScreenHeightState(screenHeight, setScreenHeight)
-        .withPositions(positions).build();
+    const characterAnimation = new CharacterAnimation({
+        character : character,
+        backgroundAnimation: backgroundAnimation,
+        gestureY : { state: [gestureY, setGestureY]},
+        isSyncingYGesture: {state: [isSyncingYGesture, setIsSyncingYGesture]},
+        targetY: {state: [targetY, setTargetY]},
+        spriteAnimationId: {state: [spriteAnimationId, setSpriteAnimationId]},
+        frameIndex: {state : [frameIndex, setFrameIndex]},
+        screenHeight: {state : [screenHeight, setScreenHeight]},
+        positions: positions});
 
     const screenOrientationHelper = new ScreenOrientationHelperBuilder(props)
         .withCoordinates(x, setX, y, setY)

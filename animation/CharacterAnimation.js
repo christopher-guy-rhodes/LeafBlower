@@ -6,20 +6,20 @@ import {Character} from "../characters/Character";
 export class CharacterAnimation {
     constructor(builder) {
         this._character = builder.character;
-        this._frameIndex = builder.frameIndex;
-        this._setFrameIndex = builder.setFrameIndex;
-        this._setCharacterActionAnimationConfig = builder.setCharacterActionAnimationConfig;
-        this._setGestureY = builder.setGestureY;
-        this._isSyncingYGesture = builder.isSyncingYGesture;
-        this._setIsSyncingYGesture = builder.setIsSyncingYGesture;
-        this._setTargetY = builder.setTargetY;
-        this._targetY = builder.targetY;
-        this._pressY = builder.pressY;
-        this._spriteAnimationId = builder.spriteAnimationId;
-        this._setSpriteAnimationId = builder.setSpriteAnimationId;
+        this._frameIndex = builder.frameIndex.state[0];
+        this._setFrameIndex = builder.frameIndex.state[1];
+        //this._setCharacterActionAnimationConfig = builder.setCharacterActionAnimationConfig;
+        this._setGestureY = builder.gestureY.state[1];
+        this._isSyncingYGesture = builder.isSyncingYGesture.state[0];
+        this._setIsSyncingYGesture = builder.isSyncingYGesture.state[1];
+        this._setTargetY = builder.targetY.state[1];
+        this._targetY = builder.targetY.state[0];
+        this._pressY = builder.gestureY.state[0];
+        this._spriteAnimationId = builder.spriteAnimationId.state[0];
+        this._setSpriteAnimationId = builder.spriteAnimationId.state[1];
         this._positions = builder.positions;
-        this._screenHeight = builder.screenHeight;
-        this._setScreenHeight = builder.setScreenHeight;
+        this._screenHeight = builder.screenHeight.state[0];
+        this._setScreenHeight = builder.screenHeight.state[1];
         this._backgroundAnimation = builder.backgroundAnimation;
     }
 
@@ -346,125 +346,5 @@ export class CharacterAnimation {
                 this.setIsSyncingYGesture(false);
             });
         }
-    }
-}
-
-export class CharacterAnimationBuilder {
-    constructor(character) {
-        this._character = character;
-    }
-
-    get character() {
-        return this._character;
-    }
-
-    get setGestureY() {
-        return this._setGestureY;
-    }
-
-    get gestureY() {
-        return this._gestureY;
-    }
-
-    withGestureYState(gestureY, setGestureY) {
-        this._gestureY = gestureY;
-        this._setGestureY = setGestureY;
-        return this;
-    }
-
-    get isSyncingYGesture() {
-        return this._isSyncingYGesture;
-    }
-
-    get setIsSyncingYGesture() {
-        return this._setIsSyncingYGesture;
-    }
-
-    withIsSyncingYGestureState(isSyncingYGesture, setIsSyncingYGesture) {
-        this._isSyncingYGesture = isSyncingYGesture;
-        this._setIsSyncingYGesture = setIsSyncingYGesture;
-        return this;
-    }
-
-    get setTargetY() {
-        return this._setTargetY;
-    }
-
-    get targetY() {
-        return this._targetY;
-    }
-
-    withTargetYState(targetY, setTargetY) {
-        this._targetY = targetY;
-        this._setTargetY = setTargetY;
-        return this;
-    }
-
-    get spriteAnimationId() {
-        return this._spriteAnimationId;
-    }
-
-    get setSpriteAnimationId() {
-        return this._setSpriteAnimationId;
-    }
-
-    withSpriteAnimationIdState(spriteAnimationId, setSpriteAnimationId) {
-        this._spriteAnimationId = spriteAnimationId;
-        this._setSpriteAnimationId = setSpriteAnimationId;
-        return this;
-    }
-
-    get frameIndex() {
-        return this._frameIndex;
-    }
-
-    get setFrameIndex() {
-        return this._setFrameIndex;
-    }
-
-    withFrameIndexState(frameIndex, setFrameIndex) {
-        this._frameIndex = frameIndex;
-        this._setFrameIndex = setFrameIndex;
-        return this;
-    }
-
-    get screenHeight() {
-        return this._screenHeight;
-    }
-
-    get setScreenHeight() {
-        return this._setScreenHeight;
-    }
-
-    withScreenHeightState(screenHeight, setScreenHeight) {
-        this._screenHeight = screenHeight;
-        this._setScreenHeight = setScreenHeight;
-        return this;
-    }
-
-    get pressY() {
-        return this._gestureY;
-    }
-
-    get positions() {
-        return this._positions;
-    }
-
-    withPositions(positions) {
-        this._positions = positions;
-        return this;
-    }
-
-    get backgroundAnimation() {
-        return this._backgroundAnimation;
-    }
-
-    withBackgroundAnimation(backgroundAnimation) {
-        this._backgroundAnimation = backgroundAnimation;
-        return this;
-    }
-
-    build() {
-        return new CharacterAnimation(this);
     }
 }

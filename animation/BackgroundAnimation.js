@@ -2,10 +2,10 @@ import {BACKGROUND_WIDTH_PX, LEFT, PPS, RIGHT, SCROLLING_ACTIONS} from "../util/
 import {Animated, Easing} from "react-native";
 
 export class BackgroundAnimation {
-    constructor(builder) {
-        this._backgroundInfo = builder.backgroundInfo;
-        this._backgroundOffset = builder.backgroundOffset;
-        this._characterProps = builder.characterProps;
+    constructor(props) {
+        this._backgroundInfo = props.backgroundInfo;
+        this._backgroundOffset = props.backgroundOffset;
+        this._characterProps = props.characterProps;
     }
 
     get backgroundInfo() {
@@ -134,37 +134,5 @@ export class BackgroundAnimation {
             });
         }
 
-    }
-}
-
-export class BackgroundAnimationBuilder {
-    constructor(backgroundInfo) {
-        this._backgroundInfo = backgroundInfo;
-    }
-
-    get backgroundInfo() {
-        return this._backgroundInfo;
-    }
-
-    get backgroundOffset() {
-        return this._backgroundOffset;
-    }
-
-    withBackgroundOffset(backgroundOffset) {
-        this._backgroundOffset = backgroundOffset;
-        return this;
-    }
-
-    get characterProps() {
-        return this._characterProps;
-    }
-
-    withCharacterProps(characterProps) {
-        this._characterProps = characterProps;
-        return this;
-    }
-
-    build() {
-        return new BackgroundAnimation(this);
     }
 }

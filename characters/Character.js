@@ -1,16 +1,17 @@
 import {Dimensions} from "react-native";
 
+
 export class Character {
-    constructor(builder) {
-        this._props = builder.characterProps;
-        this._x = builder.x;
-        this._setX = builder.setX;
-        this._y = builder.y;
-        this._setY = builder.setY;
-        this._action = builder.action;
-        this._setAction = builder.setAction;
-        this._direction = builder.direction;
-        this._setDirection = builder.setDirection;
+    constructor(props) {
+        this._props = props.props;
+        this._x = props.x.state[0];
+        this._setX = props.x.state[1];
+        this._y = props.y.state[0];
+        this._setY = props.y.state[1];
+        this._action = props.action.state[0];
+        this._setAction = props.action.state[1];
+        this._direction = props.direction.state[0];
+        this._setDirection = props.direction.state[1];
     }
 
     get props() {
@@ -58,72 +59,5 @@ export class Character {
     static getDefaultX(props) {
         return props.defaultPosition === undefined ? (Dimensions.get('window').width - props.spriteWidth) / 2
             : props.defaultPosition;
-    }
-}
-
-export class CharacterBuilder {
-
-    constructor(props) {
-        this._characterProps = props;
-    }
-
-    get characterProps() {
-        return this._characterProps;
-    }
-
-    get action() {
-        return this._action;
-    }
-
-    get setAction() {
-        return this._setAction;
-    }
-
-    withActionState(action, setAction) {
-        this._action = action;
-        this._setAction = setAction;
-        return this;
-    }
-
-    get direction() {
-        return this._direction;
-    }
-
-    get setDirection() {
-        return this._setDirection;
-    }
-
-    withDirectionState(direction, setDirection) {
-        this._direction = direction;
-        this._setDirection = setDirection;
-        return this;
-    }
-
-    get x() {
-        return this._x;
-    }
-
-    get setX() {
-        return this._setX;
-    }
-
-    get y() {
-        return this._y;
-    }
-
-    get setY() {
-        return this._setY;
-    }
-
-    withCoordinates(x, setX, y, setY) {
-        this._x = x;
-        this._setX = setX;
-        this._y = y;
-        this._setY = setY;
-        return this;
-    }
-
-    build() {
-        return new Character(this);
     }
 }
