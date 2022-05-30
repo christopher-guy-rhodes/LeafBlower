@@ -1,3 +1,5 @@
+import {Dimensions} from "react-native";
+
 export class Character {
     constructor(builder) {
         this._props = builder.characterProps;
@@ -45,6 +47,17 @@ export class Character {
 
     get setDirection() {
         return this._setDirection;
+    }
+
+    /**
+     * Get the default value of the x coordinate or sets it to the middle of the screen if there is no default set
+     *
+     * @param props the character properties
+     * @returns {number} the default value of x
+     */
+    static getDefaultX(props) {
+        return props.defaultPosition === undefined ? (Dimensions.get('window').width - props.spriteWidth) / 2
+            : props.defaultPosition;
     }
 }
 

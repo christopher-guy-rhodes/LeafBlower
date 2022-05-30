@@ -1,14 +1,14 @@
 import { React, useContext, useEffect, useState } from 'react';
 import { Animated, Dimensions, Easing, Image, Pressable, Text, View } from 'react-native';
 import { PositionContext } from "../game/position-context";
-import { BACKGROUND_WIDTH_PX, BACKGROUND_HEIGHT_PX, RIGHT, STOP, WALK } from "../util/constants";
+import {BACKGROUND_WIDTH_PX, BACKGROUND_HEIGHT_PX, RIGHT, STOP, WALK, LEFT} from "../util/constants";
 import backgroundImage from "../assets/backgrounds/scrolling-desert.png";
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { BackgroundContext } from "../game/background-context";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { CharacterAnimation, CharacterAnimationBuilder } from "../animation/CharacterAnimation";
 import {ScreenOrientationHelperBuilder} from "../screen/ScreenOrientationHelper";
-import {CharacterBuilder as ChracterBuilder} from "./Character";
+import {Character, CharacterBuilder as ChracterBuilder} from "./Character";
 import {BackgroundAnimationBuilder} from "../animation/BackgroundAnimation";
 
 const LANDSCAPE_ORIENTATIONS =
@@ -19,7 +19,7 @@ const CharacterComponent = (props) => {
     const [spriteAnimationId, setSpriteAnimationId] = useState(0);
     const [action, setAction] = useState(STOP);
     const [direction, setDirection] = useState(props.defaultDirection);
-    const [x, setX] = useState(new Animated.Value(CharacterAnimation.getDefaultX(props)));
+    const [x, setX] = useState(new Animated.Value(Character.getDefaultX(props)));
     const [y, setY] = useState(new Animated.Value(CharacterAnimation.getBottomY(props)));
     const [backgroundOffset] = useState(new Animated.Value(-1334));
     const [clickEvent, setClickEvent] = useState(false);
@@ -64,6 +64,7 @@ const CharacterComponent = (props) => {
         }
 
         characterAnimation.recordPosition();
+        backgroundAnimation.setBackgroundDirection(RIGHT);
 
         // Have the non-main character walk across the screen for testing purposes at this point
         if (!props.bindClicks) {
@@ -73,8 +74,6 @@ const CharacterComponent = (props) => {
                 'left');
         }
 
-
-
         ScreenOrientation.addOrientationChangeListener((event) => {
             screenOrientationHelper.handleScreenOrientationChange();
         });
@@ -82,9 +81,6 @@ const CharacterComponent = (props) => {
     },[]);
 
     const panGesture = Gesture.Pan()
-        .onBegin((e) => {
-            characterAnimation.handleDirectionChange(e.absoluteX, e.absoluteY);
-        })
         .onStart((e) => {
             characterAnimation.startSyncYToGesture(e.absoluteX, e.absoluteY);
         })

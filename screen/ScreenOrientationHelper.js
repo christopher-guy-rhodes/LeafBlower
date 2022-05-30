@@ -42,7 +42,7 @@ export class ScreenOrientationHelper {
 
         let barbarianXDelta = this.positions['positions']['barbarian']['x'] + Dimensions.get('window').height - this.characterProps.spriteWidth;
         if (this.characterProps.bindClicks) {
-            this.setX(new Animated.Value(CharacterAnimation.getDefaultX(this.characterProps)));
+            this.setX(new Animated.Value(Character.getDefaultX(this.characterProps)));
         } else {
             this.x.setOffset(barbarianXDelta);
         }

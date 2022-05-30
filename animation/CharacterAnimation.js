@@ -1,6 +1,7 @@
 import {BACKGROUND_WIDTH_PX, FPS, LEFT, PPS, RIGHT, SCROLLING_ACTIONS, STOP, WALK} from "../util/constants";
 import {Animated, Dimensions, Easing} from "react-native";
 import {BackgroundAnimationBuilder} from "./BackgroundAnimation";
+import {Character} from "../characters/Character";
 
 export class CharacterAnimation {
     constructor(builder) {
@@ -82,23 +83,7 @@ export class CharacterAnimation {
         return this._setScreenHeight;
     }
 
-    /**
-     * Get the default value of the x coordinate based on the direction the character is facing
-     *
-     * @param props the character properties
-     * @returns {number} the default value of x
-     */
-    static getDefaultX(props) {
-        return props.defaultPosition === undefined ? (Dimensions.get('window').width - props.spriteWidth) / 2
-            : props.defaultPosition;
-    }
-
-    /**
-     * Handles possible direction change. If the character is changing direction the background image loaded needs to be
-     * changed to the appropriate copy (left, right or center) so that the edge of the 3 copies of the background images
-     * is not shown.
-     * @param e the press event
-     */
+    /* private */
     handleDirectionChange(gestureX, gestureY) {
         clearInterval(this.spriteAnimationId);
         let dir = this.isChangingDirectionTo(gestureX, gestureY, LEFT)
@@ -130,7 +115,7 @@ export class CharacterAnimation {
 
     /* private */
     isChangingDirectionTo(pageX, pageY, testDir) {
-        let xValue = this.character.x._value !== undefined ? this.character.x._value : CharacterAnimation.getDefaultX(this.character.props);
+        let xValue = this.character.x._value !== undefined ? this.character.x._value : Character.getDefaultX(this.character.props);
         return testDir === LEFT
             ? this.character.direction === RIGHT && pageX < xValue + this.character.props.spriteWidth / 2
             : this.character.direction === LEFT && pageX >= xValue + this.character.props.spriteWidth / 2;
