@@ -5,82 +5,21 @@ import {Character} from "../characters/Character";
 
 export class CharacterAnimation {
     constructor(props) {
-        this._character = props.character;
+        this.character = props.character;
         this._frameIndex = props.frameIndex.state[0];
-        this._setFrameIndex = props.frameIndex.state[1];
-        //this._setCharacterActionAnimationConfig = builder.setCharacterActionAnimationConfig;
-        this._setGestureY = props.gestureY.state[1];
-        this._isSyncingYGesture = props.isSyncingYGesture.state[0];
-        this._setIsSyncingYGesture = props.isSyncingYGesture.state[1];
-        this._setTargetY = props.targetY.state[1];
-        this._targetY = props.targetY.state[0];
-        this._pressY = props.gestureY.state[0];
-        this._spriteAnimationId = props.spriteAnimationId.state[0];
-        this._setSpriteAnimationId = props.spriteAnimationId.state[1];
-        this._positions = props.positions;
-        this._screenHeight = props.screenHeight.state[0];
-        this._setScreenHeight = props.screenHeight.state[1];
-        this._backgroundAnimation = props.backgroundAnimation;
-    }
-
-    get backgroundAnimation() {
-        return this._backgroundAnimation;
-    }
-
-    get character() {
-        return this._character;
-    }
-
-    get setGestureY() {
-        return this._setGestureY;
-    }
-
-    get targetY() {
-        return this._targetY;
-    }
-
-    get setFrameIndex() {
-        return this._setFrameIndex;
-    }
-
-    get setCharacterActionAnimationConfig() {
-        return this._setCharacterActionAnimationConfig;
-    }
-
-    get spriteAnimationId() {
-        return this._spriteAnimationId;
-    }
-
-    get setSpriteAnimationId() {
-        return this._setSpriteAnimationId;
-    }
-
-    get positions() {
-        return this._positions;
-    }
-
-    get setTargetY() {
-        return this._setTargetY;
-    }
-
-    get setIsSyncingYGesture() {
-        return this._setIsSyncingYGesture;
-    }
-
-    get isSyncingYGesture() {
-        return this._isSyncingYGesture;
-    }
-
-    get pressY() {
-        return this._pressY;
-    }
-
-    get targetY() {
-        return this._targetY;
-    }
-
-    get setScreenHeight() {
-        return this._setScreenHeight;
+        this.setFrameIndex = props.frameIndex.state[1];
+        this.setGestureY = props.gestureY.state[1];
+        this.isSyncingYGesture = props.isSyncingYGesture.state[0];
+        this.setIsSyncingYGesture = props.isSyncingYGesture.state[1];
+        this.setTargetY = props.targetY.state[1];
+        this.targetY = props.targetY.state[0];
+        this.pressY = props.gestureY.state[0];
+        this.spriteAnimationId = props.spriteAnimationId.state[0];
+        this.setSpriteAnimationId = props.spriteAnimationId.state[1];
+        this.positions = props.positions;
+        this.screenHeight = props.screenHeight.state[0];
+        this.setScreenHeight = props.screenHeight.state[1];
+        this.backgroundAnimation = props.backgroundAnimation;
     }
 
     /* private */

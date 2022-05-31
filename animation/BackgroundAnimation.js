@@ -3,21 +3,9 @@ import {Animated, Easing} from "react-native";
 
 export class BackgroundAnimation {
     constructor(props) {
-        this._backgroundInfo = props.backgroundInfo;
-        this._backgroundOffset = props.backgroundOffset;
-        this._characterProps = props.characterProps;
-    }
-
-    get backgroundInfo() {
-        return this._backgroundInfo;
-    }
-
-    get backgroundOffset() {
-        return this._backgroundOffset;
-    }
-
-    get characterProps() {
-        return this._characterProps;
+        this.backgroundInfo = props.backgroundInfo;
+        this.backgroundOffset = props.backgroundOffset;
+        this.characterProps = props.characterProps;
     }
 
     /**
